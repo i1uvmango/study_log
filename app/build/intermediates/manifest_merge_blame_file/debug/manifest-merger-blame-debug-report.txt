@@ -1,0 +1,206 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.studylogapp"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="34" />
+10
+11    <uses-permission android:name="android.permission.CAMERA" />
+11-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:5:5-65
+11-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:5:22-62
+12    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+12-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:6:5-80
+12-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:6:22-77
+13    <uses-permission
+13-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:7:5-8:38
+14        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+14-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:7:22-78
+15        android:maxSdkVersion="32" />
+15-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:8:9-35
+16    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+16-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:9:5-76
+16-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:9:22-73
+17    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+17-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:10:5-79
+17-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:10:22-76
+18    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+18-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:11:5-81
+18-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:11:22-78
+19    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+19-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:12:5-77
+19-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:12:22-74
+20
+21    <uses-feature
+21-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:14:5-85
+22        android:name="android.hardware.camera"
+22-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:14:19-57
+23        android:required="false" />
+23-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:14:58-82
+24    <uses-feature
+24-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:15:5-95
+25        android:name="android.hardware.camera.autofocus"
+25-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:15:19-67
+26        android:required="false" />
+26-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:15:68-92
+27
+28    <permission
+28-->[androidx.core:core:1.9.0] C:\Users\xcrui\.gradle\caches\transforms-3\543740e42155bb89dcbd6bdda0f43b68\transformed\core-1.9.0\AndroidManifest.xml:22:5-24:47
+29        android:name="com.example.studylogapp.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+29-->[androidx.core:core:1.9.0] C:\Users\xcrui\.gradle\caches\transforms-3\543740e42155bb89dcbd6bdda0f43b68\transformed\core-1.9.0\AndroidManifest.xml:23:9-81
+30        android:protectionLevel="signature" />
+30-->[androidx.core:core:1.9.0] C:\Users\xcrui\.gradle\caches\transforms-3\543740e42155bb89dcbd6bdda0f43b68\transformed\core-1.9.0\AndroidManifest.xml:24:9-44
+31
+32    <uses-permission android:name="com.example.studylogapp.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+32-->[androidx.core:core:1.9.0] C:\Users\xcrui\.gradle\caches\transforms-3\543740e42155bb89dcbd6bdda0f43b68\transformed\core-1.9.0\AndroidManifest.xml:26:5-97
+32-->[androidx.core:core:1.9.0] C:\Users\xcrui\.gradle\caches\transforms-3\543740e42155bb89dcbd6bdda0f43b68\transformed\core-1.9.0\AndroidManifest.xml:26:22-94
+33
+34    <application
+34-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:17:5-61:19
+35        android:allowBackup="true"
+35-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:18:9-35
+36        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+36-->[androidx.core:core:1.9.0] C:\Users\xcrui\.gradle\caches\transforms-3\543740e42155bb89dcbd6bdda0f43b68\transformed\core-1.9.0\AndroidManifest.xml:28:18-86
+37        android:debuggable="true"
+38        android:extractNativeLibs="false"
+39        android:icon="@drawable/ic_launcher"
+39-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:19:9-45
+40        android:label="@string/app_name"
+40-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:20:9-41
+41        android:roundIcon="@drawable/ic_launcher_round"
+41-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:21:9-56
+42        android:supportsRtl="true"
+42-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:22:9-35
+43        android:testOnly="true"
+44        android:theme="@style/Theme.AppCompat.Light.DarkActionBar" >
+44-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:23:9-67
+45        <activity
+45-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:26:9-33:20
+46            android:name="com.example.studylogapp.MainActivity"
+46-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:27:13-41
+47            android:exported="true" >
+47-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:28:13-36
+48            <intent-filter>
+48-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:29:13-32:29
+49                <action android:name="android.intent.action.MAIN" />
+49-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:30:17-69
+49-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:30:25-66
+50
+51                <category android:name="android.intent.category.LAUNCHER" />
+51-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:31:17-77
+51-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:31:27-74
+52            </intent-filter>
+53        </activity>
+54        <activity
+54-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:35:9-37:40
+55            android:name="com.example.studylogapp.ui.calendar.CalendarActivity"
+55-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:36:13-57
+56            android:exported="false" />
+56-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:37:13-37
+57        <activity
+57-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:39:9-41:40
+58            android:name="com.example.studylogapp.ui.posting.PostingActivity"
+58-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:40:13-55
+59            android:exported="false" />
+59-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:41:13-37
+60        <activity
+60-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:43:9-46:72
+61            android:name="com.example.studylogapp.ui.viewer.SlideViewerActivity"
+61-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:44:13-58
+62            android:exported="false"
+62-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:45:13-37
+63            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+63-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:46:13-69
+64        <activity
+64-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:48:9-50:40
+65            android:name="com.example.studylogapp.ui.settings.SettingsActivity"
+65-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:49:13-57
+66            android:exported="false" />
+66-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:50:13-37
+67
+68        <receiver
+68-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:52:9-59:20
+69            android:name="com.example.studylogapp.alarm.AlarmReceiver"
+69-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:53:13-48
+70            android:enabled="true"
+70-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:54:13-35
+71            android:exported="true" >
+71-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:55:13-36
+72            <intent-filter>
+72-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:56:13-58:29
+73                <action android:name="android.intent.action.BOOT_COMPLETED" />
+73-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:57:17-79
+73-->C:\Users\xcrui\OneDrive\바탕 화면\android_studio\app\src\main\AndroidManifest.xml:57:25-76
+74            </intent-filter>
+75        </receiver>
+76
+77        <provider
+77-->[androidx.emoji2:emoji2:1.2.0] C:\Users\xcrui\.gradle\caches\transforms-3\78e0f475248ccf690a14f03fa1cc16c2\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+78            android:name="androidx.startup.InitializationProvider"
+78-->[androidx.emoji2:emoji2:1.2.0] C:\Users\xcrui\.gradle\caches\transforms-3\78e0f475248ccf690a14f03fa1cc16c2\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:25:13-67
+79            android:authorities="com.example.studylogapp.androidx-startup"
+79-->[androidx.emoji2:emoji2:1.2.0] C:\Users\xcrui\.gradle\caches\transforms-3\78e0f475248ccf690a14f03fa1cc16c2\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:26:13-68
+80            android:exported="false" >
+80-->[androidx.emoji2:emoji2:1.2.0] C:\Users\xcrui\.gradle\caches\transforms-3\78e0f475248ccf690a14f03fa1cc16c2\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:27:13-37
+81            <meta-data
+81-->[androidx.emoji2:emoji2:1.2.0] C:\Users\xcrui\.gradle\caches\transforms-3\78e0f475248ccf690a14f03fa1cc16c2\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+82                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+82-->[androidx.emoji2:emoji2:1.2.0] C:\Users\xcrui\.gradle\caches\transforms-3\78e0f475248ccf690a14f03fa1cc16c2\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:30:17-75
+83                android:value="androidx.startup" />
+83-->[androidx.emoji2:emoji2:1.2.0] C:\Users\xcrui\.gradle\caches\transforms-3\78e0f475248ccf690a14f03fa1cc16c2\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:31:17-49
+84            <meta-data
+84-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\xcrui\.gradle\caches\transforms-3\e20e1fbd31487f46b59d06879321c31d\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:29:13-31:52
+85                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+85-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\xcrui\.gradle\caches\transforms-3\e20e1fbd31487f46b59d06879321c31d\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:30:17-78
+86                android:value="androidx.startup" />
+86-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\xcrui\.gradle\caches\transforms-3\e20e1fbd31487f46b59d06879321c31d\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:31:17-49
+87            <meta-data
+87-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
+88                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+88-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+89                android:value="androidx.startup" />
+89-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
+90        </provider>
+91
+92        <receiver
+92-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
+93            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+93-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
+94            android:directBootAware="false"
+94-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
+95            android:enabled="true"
+95-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
+96            android:exported="true"
+96-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
+97            android:permission="android.permission.DUMP" >
+97-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
+98            <intent-filter>
+98-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
+99                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+99-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
+99-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
+100            </intent-filter>
+101            <intent-filter>
+101-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
+102                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+102-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
+102-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
+103            </intent-filter>
+104            <intent-filter>
+104-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
+105                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+105-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
+105-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
+106            </intent-filter>
+107            <intent-filter>
+107-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
+108                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+108-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
+108-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\xcrui\.gradle\caches\transforms-3\7aa005dcbc43d74648b0b176c1b9ddb8\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+109            </intent-filter>
+110        </receiver>
+111    </application>
+112
+113</manifest>

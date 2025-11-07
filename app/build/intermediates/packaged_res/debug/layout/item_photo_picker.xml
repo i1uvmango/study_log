@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/photo_preview_size"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:layout_marginEnd="8dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/photo_preview_size">
+
+        <ImageView
+            android:id="@+id/iv_photo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:background="@color/calendar_cell_empty" />
+
+        <Button
+            android:id="@+id/btn_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:text="X"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="4dp" />
+
+    </RelativeLayout>
+
+    <EditText
+        android:id="@+id/et_summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/summary_hint"
+        android:maxLines="1"
+        android:maxLength="50"
+        android:layout_marginTop="8dp"
+        android:textSize="12sp" />
+
+    <EditText
+        android:id="@+id/et_keyword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/keyword_hint"
+        android:maxLines="1"
+        android:maxLength="20"
+        android:layout_marginTop="4dp"
+        android:textSize="12sp" />
+
+</LinearLayout>
+
