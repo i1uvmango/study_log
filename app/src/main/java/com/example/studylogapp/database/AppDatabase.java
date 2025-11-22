@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.example.studylogapp.model.StudyLog;
 import com.example.studylogapp.model.StudyPost;
+import com.example.studylogapp.model.Quiz;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -184,8 +185,64 @@ public class AppDatabase {
     }
 
     public void clearAllData() {
+        database.delete(DatabaseHelper.TABLE_QUIZ, null, null);
         database.delete(DatabaseHelper.TABLE_STUDY_POST, null, null);
         database.delete(DatabaseHelper.TABLE_STUDY_LOG, null, null);
+    }
+
+    // Quiz CRUD
+    public long insertQuiz(Quiz quiz) {
+        ContentValues values = new ContentValues();
+        values.put(DatabaseHelper.COLUMN_QUIZ_STUDY_LOG_ID, quiz.getStudyLogId());
+        values.put(DatabaseHelper.COLUMN_QUIZ_QUESTION, quiz.getQuestion());
+        values.put(DatabaseHelper.COLUMN_QUIZ_OPTION1, quiz.getOption1());
+        values.put(DatabaseHelper.COLUMN_QUIZ_OPTION2, quiz.getOption2());
+        values.put(DatabaseHelper.COLUMN_QUIZ_OPTION3, quiz.getOption3());
+        values.put(DatabaseHelper.COLUMN_QUIZ_OPTION4, quiz.getOption4());
+        values.put(DatabaseHelper.COLUMN_QUIZ_CORRECT_ANSWER, quiz.getCorrectAnswer());
+        values.put(DatabaseHelper.COLUMN_QUIZ_EXPLANATION, quiz.getExplanation());
+        return database.insert(DatabaseHelper.TABLE_QUIZ, null, values);
+    }
+
+    public Quiz getQuizByLogId(long logId) {
+        Cursor cursor = database.query(
+            DatabaseHelper.TABLE_QUIZ,
+            null,
+            DatabaseHelper.COLUMN_QUIZ_STUDY_LOG_ID + " = ?",
+            new String[]{String.valueOf(logId)},
+            null, null, null
+        );
+
+        Quiz quiz = null;
+        if (cursor != null && cursor.moveToFirst()) {
+            quiz = cursorToQuiz(cursor);
+            cursor.close();
+        }
+        return quiz;
+    }
+
+    public Quiz getQuizByDate(String date) {
+        StudyLog log = getStudyLogByDate(date);
+        if (log == null) {
+            return null;
+        }
+        return getQuizByLogId(log.getId());
+    }
+
+    public void deleteQuizByLogId(long logId) {
+        database.delete(
+            DatabaseHelper.TABLE_QUIZ,
+            DatabaseHelper.COLUMN_QUIZ_STUDY_LOG_ID + " = ?",
+            new String[]{String.valueOf(logId)}
+        );
+    }
+
+    public void deleteQuiz(long quizId) {
+        database.delete(
+            DatabaseHelper.TABLE_QUIZ,
+            DatabaseHelper.COLUMN_QUIZ_ID + " = ?",
+            new String[]{String.valueOf(quizId)}
+        );
     }
 
     // Helper methods
@@ -207,6 +264,20 @@ public class AppDatabase {
         post.setKeyword(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_POST_KEYWORD)));
         post.setOrder(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_POST_ORDER)));
         return post;
+    }
+
+    private Quiz cursorToQuiz(Cursor cursor) {
+        Quiz quiz = new Quiz();
+        quiz.setId(cursor.getLong(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_QUIZ_ID)));
+        quiz.setStudyLogId(cursor.getLong(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_QUIZ_STUDY_LOG_ID)));
+        quiz.setQuestion(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_QUIZ_QUESTION)));
+        quiz.setOption1(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_QUIZ_OPTION1)));
+        quiz.setOption2(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_QUIZ_OPTION2)));
+        quiz.setOption3(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_QUIZ_OPTION3)));
+        quiz.setOption4(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_QUIZ_OPTION4)));
+        quiz.setCorrectAnswer(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_QUIZ_CORRECT_ANSWER)));
+        quiz.setExplanation(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_QUIZ_EXPLANATION)));
+        return quiz;
     }
 }
 

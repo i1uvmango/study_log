@@ -21,11 +21,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.studylogapp.R;
+import com.example.studylogapp.ai.GeminiQuizGenerator;
 import com.example.studylogapp.database.AppDatabase;
 import com.example.studylogapp.model.StudyPost;
+import com.example.studylogapp.model.Quiz;
 import com.example.studylogapp.storage.ImageStorageManager;
 import com.example.studylogapp.utils.DateUtils;
 import com.example.studylogapp.utils.PermissionUtils;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -189,6 +194,8 @@ public class PostingActivity extends AppCompatActivity {
         // 기존 게시물 삭제
         if (existingLogId != -1) {
             database.deleteAllPostsByLogId(existingLogId);
+            // 기존 퀴즈도 삭제
+            database.deleteQuizByLogId(existingLogId);
         }
 
         // 새 게시물 저장
@@ -199,9 +206,33 @@ public class PostingActivity extends AppCompatActivity {
             database.insertStudyPost(post);
         }
 
+        // 퀴즈 생성 (첫 번째 게시물을 기반으로)
+        if (!photoItems.isEmpty()) {
+            PhotoItem firstItem = photoItems.get(0);
+            generateQuizAsync(logId, firstItem.getImagePath(), firstItem.getSummary(), firstItem.getKeyword());
+        }
+
         Toast.makeText(this, R.string.save, Toast.LENGTH_SHORT).show();
         setResult(RESULT_OK);
         finish();
+    }
+
+    private void generateQuizAsync(long logId, String imagePath, String summary, String keyword) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            GeminiQuizGenerator generator = new GeminiQuizGenerator(PostingActivity.this);
+            Quiz quiz = generator.generateQuiz(imagePath, summary, keyword);
+            if (quiz != null) {
+                quiz.setStudyLogId(logId);
+                database.insertQuiz(quiz);
+                runOnUiThread(() -> {
+                    Toast.makeText(PostingActivity.this, "퀴즈가 생성되었습니다!", Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                // 퀴즈 생성 실패는 조용히 처리 (사용자에게 큰 영향 없음)
+                android.util.Log.w("PostingActivity", "퀴즈 생성 실패");
+            }
+        });
     }
 
     @Override

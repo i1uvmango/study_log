@@ -42,5 +42,93 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
+    <!-- 퀴즈 영역 -->
+    <LinearLayout
+        android:id="@+id/quiz_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@android:color/white"
+        android:layout_marginTop="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_quiz_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="오늘의 복습 퀴즈"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tv_quiz_question"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="퀴즈 문제가 여기에 표시됩니다"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btn_quiz_option1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="선택지 1"
+                android:layout_marginBottom="8dp"
+                android:textAlignment="textStart" />
+
+            <Button
+                android:id="@+id/btn_quiz_option2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="선택지 2"
+                android:layout_marginBottom="8dp"
+                android:textAlignment="textStart" />
+
+            <Button
+                android:id="@+id/btn_quiz_option3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="선택지 3"
+                android:layout_marginBottom="8dp"
+                android:textAlignment="textStart" />
+
+            <Button
+                android:id="@+id/btn_quiz_option4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="선택지 4"
+                android:layout_marginBottom="12dp"
+                android:textAlignment="textStart" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_quiz_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:visibility="gone"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/tv_quiz_explanation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:visibility="gone"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/darker_gray" />
+
+    </LinearLayout>
+
 </LinearLayout>
 
