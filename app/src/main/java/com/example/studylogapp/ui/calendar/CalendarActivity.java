@@ -110,17 +110,41 @@ public class CalendarActivity extends AppCompatActivity {
 
     private void loadTodayQuiz() {
         String today = DateUtils.formatDate(Calendar.getInstance());
+        android.util.Log.d("CalendarActivity", "오늘 날짜: " + today);
+        
         currentQuiz = database.getQuizByDate(today);
+        
+        // 퀴즈 영역은 항상 보이게 설정
+        quizContainer.setVisibility(View.VISIBLE);
         
         if (currentQuiz != null) {
             displayQuiz(currentQuiz);
-            quizContainer.setVisibility(View.VISIBLE);
+            android.util.Log.d("CalendarActivity", "퀴즈 표시됨");
         } else {
-            quizContainer.setVisibility(View.GONE);
+            // 퀴즈가 없을 때 안내 메시지 표시
+            tvQuizTitle.setText("오늘의 복습 퀴즈");
+            tvQuizQuestion.setText("아직 퀴즈가 없습니다.\n게시물을 저장하면 퀴즈가 자동으로 생성됩니다.");
+            
+            // 선택지 버튼 숨기기
+            btnQuizOption1.setVisibility(View.GONE);
+            btnQuizOption2.setVisibility(View.GONE);
+            btnQuizOption3.setVisibility(View.GONE);
+            btnQuizOption4.setVisibility(View.GONE);
+            tvQuizResult.setVisibility(View.GONE);
+            tvQuizExplanation.setVisibility(View.GONE);
+            
+            android.util.Log.d("CalendarActivity", "퀴즈 없음 - 안내 메시지 표시");
         }
     }
 
     private void displayQuiz(Quiz quiz) {
+        // 모든 UI 요소 보이게 설정
+        btnQuizOption1.setVisibility(View.VISIBLE);
+        btnQuizOption2.setVisibility(View.VISIBLE);
+        btnQuizOption3.setVisibility(View.VISIBLE);
+        btnQuizOption4.setVisibility(View.VISIBLE);
+        
+        tvQuizTitle.setText("오늘의 복습 퀴즈");
         tvQuizQuestion.setText(quiz.getQuestion());
         btnQuizOption1.setText("1. " + quiz.getOption1());
         btnQuizOption2.setText("2. " + quiz.getOption2());
