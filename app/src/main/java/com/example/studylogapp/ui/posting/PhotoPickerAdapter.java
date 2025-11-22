@@ -24,6 +24,16 @@ public class PhotoPickerAdapter extends RecyclerView.Adapter<PhotoPickerAdapter.
     public interface OnDeleteListener {
         void onDelete(int position);
     }
+    
+    private OnImageClickListener imageClickListener;
+    
+    public interface OnImageClickListener {
+        void onImageClick(int position);
+    }
+    
+    public void setOnImageClickListener(OnImageClickListener listener) {
+        this.imageClickListener = listener;
+    }
 
     public PhotoPickerAdapter(List<PhotoItem> photoItems, PostingActivity activity) {
         this.photoItems = photoItems;
@@ -73,7 +83,19 @@ public class PhotoPickerAdapter extends RecyclerView.Adapter<PhotoPickerAdapter.
                     .load(imageFile)
                     .centerCrop()
                     .into(ivPhoto);
+            } else {
+                // 이미지가 없으면 기본 이미지 표시
+                ivPhoto.setImageResource(android.R.drawable.ic_menu_gallery);
             }
+            
+            // 이미지 클릭 리스너 추가
+            ivPhoto.setOnClickListener(v -> {
+                if (imageClickListener != null) {
+                    imageClickListener.onImageClick(position);
+                }
+            });
+            ivPhoto.setClickable(true);
+            ivPhoto.setFocusable(true);
 
             etSummary.setText(item.getSummary());
             etSummary.setHint(activity.getString(R.string.summary_hint));

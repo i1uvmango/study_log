@@ -18,6 +18,7 @@
     <dimen name="margin_small">8dp</dimen>
     <dimen name="photo_preview_size">120dp</dimen>
     <dimen name="thumbnail_size">40dp</dimen>
+    <string name="add_lecture">학습 자료 추가</string>
     <string name="add_photo">사진 추가</string>
     <string name="alarm_enable">알람 켜기/끄기</string>
     <string name="alarm_time">알람 시간</string>

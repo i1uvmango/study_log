@@ -39,7 +39,10 @@ import java.util.List;
 public class PostingActivity extends AppCompatActivity {
     private static final int REQUEST_CAMERA = 1;
     private static final int REQUEST_GALLERY = 2;
+    private static final int REQUEST_CHANGE_IMAGE = 3;
     private static final int MAX_PHOTOS = 3;
+    
+    private int changingImagePosition = -1;
 
     private TextView tvDate;
     private Button btnAddPhoto, btnSave, btnCancel;
@@ -97,6 +100,16 @@ public class PostingActivity extends AppCompatActivity {
             photoItems.remove(position);
             adapter.notifyDataSetChanged();
         });
+        
+        adapter.setOnImageClickListener(position -> {
+            // 이미지 클릭 시 갤러리에서 선택
+            if (!PermissionUtils.hasStoragePermission(this)) {
+                PermissionUtils.requestStoragePermission(this);
+                return;
+            }
+            changingImagePosition = position;
+            openGalleryForChange();
+        });
     }
 
     private void loadExistingData() {
@@ -150,11 +163,19 @@ public class PostingActivity extends AppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, REQUEST_GALLERY);
     }
+    
+    private void openGalleryForChange() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, REQUEST_CHANGE_IMAGE);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != RESULT_OK) return;
+        if (resultCode != RESULT_OK) {
+            changingImagePosition = -1;
+            return;
+        }
 
         if (requestCode == REQUEST_CAMERA && data != null) {
             Bitmap bitmap = (Bitmap) data.getExtras().get("data");
@@ -170,6 +191,21 @@ public class PostingActivity extends AppCompatActivity {
                 photoItems.add(new PhotoItem(imagePath, "", ""));
                 adapter.notifyDataSetChanged();
             }
+        } else if (requestCode == REQUEST_CHANGE_IMAGE && data != null && changingImagePosition >= 0) {
+            // 기존 이미지 교체
+            Uri uri = data.getData();
+            String newImagePath = imageStorage.saveImageFromUri(uri);
+            if (newImagePath != null && changingImagePosition < photoItems.size()) {
+                PhotoItem item = photoItems.get(changingImagePosition);
+                // 기존 이미지 삭제
+                if (item.getImagePath() != null) {
+                    imageStorage.deleteImage(item.getImagePath());
+                }
+                // 새 이미지로 교체
+                item.setImagePath(newImagePath);
+                adapter.notifyDataSetChanged();
+            }
+            changingImagePosition = -1;
         }
     }
 
@@ -191,6 +227,9 @@ public class PostingActivity extends AppCompatActivity {
             return;
         }
 
+        // 저장 전에 모든 PhotoItem의 summary와 keyword를 강제로 업데이트
+        updateAllPhotoItems();
+
         // 기존 게시물 삭제
         if (existingLogId != -1) {
             database.deleteAllPostsByLogId(existingLogId);
@@ -209,7 +248,19 @@ public class PostingActivity extends AppCompatActivity {
         // 퀴즈 생성 (첫 번째 게시물을 기반으로)
         if (!photoItems.isEmpty()) {
             PhotoItem firstItem = photoItems.get(0);
-            generateQuizAsync(logId, firstItem.getImagePath(), firstItem.getSummary(), firstItem.getKeyword());
+            String imagePath = firstItem.getImagePath();
+            String summary = firstItem.getSummary();
+            String keyword = firstItem.getKeyword();
+            
+            // 이미지가 없어도 summary나 keyword가 있으면 퀴즈 생성 가능
+            if (imagePath != null || (summary != null && !summary.trim().isEmpty()) || 
+                (keyword != null && !keyword.trim().isEmpty())) {
+                android.util.Log.d("PostingActivity", "퀴즈 생성 시작 - 이미지: " + imagePath + 
+                    ", 요약: " + summary + ", 키워드: " + keyword);
+                generateQuizAsync(logId, imagePath, summary, keyword);
+            } else {
+                android.util.Log.w("PostingActivity", "퀴즈 생성 불가 - 이미지, 요약, 키워드가 모두 없습니다.");
+            }
         }
 
         Toast.makeText(this, R.string.save, Toast.LENGTH_SHORT).show();
@@ -217,20 +268,45 @@ public class PostingActivity extends AppCompatActivity {
         finish();
     }
 
+    private void updateAllPhotoItems() {
+        // RecyclerView의 모든 ViewHolder에서 현재 입력된 값을 가져와서 PhotoItem에 저장
+        for (int i = 0; i < recyclerView.getChildCount(); i++) {
+            View childView = recyclerView.getChildAt(i);
+            if (childView != null) {
+                android.widget.EditText etSummary = childView.findViewById(R.id.et_summary);
+                android.widget.EditText etKeyword = childView.findViewById(R.id.et_keyword);
+                
+                if (etSummary != null && etKeyword != null && i < photoItems.size()) {
+                    PhotoItem item = photoItems.get(i);
+                    item.setSummary(etSummary.getText().toString());
+                    item.setKeyword(etKeyword.getText().toString());
+                }
+            }
+        }
+    }
+
     private void generateQuizAsync(long logId, String imagePath, String summary, String keyword) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            GeminiQuizGenerator generator = new GeminiQuizGenerator(PostingActivity.this);
-            Quiz quiz = generator.generateQuiz(imagePath, summary, keyword);
-            if (quiz != null) {
-                quiz.setStudyLogId(logId);
-                database.insertQuiz(quiz);
-                runOnUiThread(() -> {
-                    Toast.makeText(PostingActivity.this, "퀴즈가 생성되었습니다!", Toast.LENGTH_SHORT).show();
-                });
-            } else {
-                // 퀴즈 생성 실패는 조용히 처리 (사용자에게 큰 영향 없음)
-                android.util.Log.w("PostingActivity", "퀴즈 생성 실패");
+            try {
+                android.util.Log.d("PostingActivity", "퀴즈 생성 시작 - logId: " + logId);
+                GeminiQuizGenerator generator = new GeminiQuizGenerator(PostingActivity.this);
+                Quiz quiz = generator.generateQuiz(imagePath, summary, keyword);
+                if (quiz != null) {
+                    quiz.setStudyLogId(logId);
+                    long quizId = database.insertQuiz(quiz);
+                    android.util.Log.d("PostingActivity", "퀴즈 생성 성공! quizId: " + quizId);
+                    runOnUiThread(() -> {
+                        Toast.makeText(PostingActivity.this, "퀴즈가 생성되었습니다!", Toast.LENGTH_SHORT).show();
+                    });
+                } else {
+                    android.util.Log.e("PostingActivity", "퀴즈 생성 실패 - generator.generateQuiz()가 null을 반환했습니다.");
+                    android.util.Log.e("PostingActivity", "이미지 경로: " + imagePath);
+                    android.util.Log.e("PostingActivity", "요약: " + summary);
+                    android.util.Log.e("PostingActivity", "키워드: " + keyword);
+                }
+            } catch (Exception e) {
+                android.util.Log.e("PostingActivity", "퀴즈 생성 중 예외 발생", e);
             }
         });
     }

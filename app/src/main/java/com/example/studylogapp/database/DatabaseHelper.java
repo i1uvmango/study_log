@@ -85,8 +85,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 3) {
-            // Quiz 테이블 추가
             db.execSQL(CREATE_TABLE_QUIZ);
+        }
+        if (oldVersion < 2) {
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_STUDY_POST);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_STUDY_LOG);
+            onCreate(db);
         }
     }
 

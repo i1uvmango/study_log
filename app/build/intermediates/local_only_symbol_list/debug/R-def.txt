@@ -28,6 +28,10 @@ id btn_delete
 id btn_edit
 id btn_next_month
 id btn_prev_month
+id btn_quiz_option1
+id btn_quiz_option2
+id btn_quiz_option3
+id btn_quiz_option4
 id btn_save
 id btn_set_alarm_time
 id btn_settings
@@ -35,6 +39,7 @@ id et_keyword
 id et_summary
 id iv_photo
 id iv_thumbnail
+id quiz_container
 id recycler_calendar
 id recycler_photos
 id switch_alarm
@@ -42,6 +47,10 @@ id tv_alarm_time
 id tv_date
 id tv_keyword
 id tv_month_year
+id tv_quiz_explanation
+id tv_quiz_question
+id tv_quiz_result
+id tv_quiz_title
 id tv_summary
 id viewpager_photos
 id viewpager_slides
@@ -54,6 +63,7 @@ layout item_calendar_day
 layout item_photo_picker
 layout item_photo_slide
 layout item_slide_post
+string add_lecture
 string add_photo
 string alarm_enable
 string alarm_time

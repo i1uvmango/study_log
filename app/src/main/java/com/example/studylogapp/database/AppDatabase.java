@@ -185,9 +185,9 @@ public class AppDatabase {
     }
 
     public void clearAllData() {
-        database.delete(DatabaseHelper.TABLE_QUIZ, null, null);
         database.delete(DatabaseHelper.TABLE_STUDY_POST, null, null);
         database.delete(DatabaseHelper.TABLE_STUDY_LOG, null, null);
+        database.delete(DatabaseHelper.TABLE_QUIZ, null, null);
     }
 
     // Quiz CRUD
@@ -234,14 +234,6 @@ public class AppDatabase {
             DatabaseHelper.TABLE_QUIZ,
             DatabaseHelper.COLUMN_QUIZ_STUDY_LOG_ID + " = ?",
             new String[]{String.valueOf(logId)}
-        );
-    }
-
-    public void deleteQuiz(long quizId) {
-        database.delete(
-            DatabaseHelper.TABLE_QUIZ,
-            DatabaseHelper.COLUMN_QUIZ_ID + " = ?",
-            new String[]{String.valueOf(quizId)}
         );
     }
 

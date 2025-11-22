@@ -4,8 +4,8 @@
         "source": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-main-35:\\layout\\item_calendar_day.xml"
     },
     {
-        "merged": "com.example.studylogapp-merged_res-33:/drawable_ic_launcher_round.xml.flat",
-        "source": "com.example.studylogapp-main-35:/drawable/ic_launcher_round.xml"
+        "merged": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-merged_res-33:\\drawable_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-main-35:\\drawable\\ic_launcher_round.xml"
     },
     {
         "merged": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-merged_res-33:\\layout_item_photo_slide.xml.flat",
@@ -24,10 +24,6 @@
         "source": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-main-35:\\layout\\activity_main.xml"
     },
     {
-        "merged": "com.example.studylogapp-merged_res-33:/drawable_ic_launcher.xml.flat",
-        "source": "com.example.studylogapp-main-35:/drawable/ic_launcher.xml"
-    },
-    {
         "merged": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-merged_res-33:\\layout_activity_slide_viewer.xml.flat",
         "source": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-main-35:\\layout\\activity_slide_viewer.xml"
     },
@@ -36,11 +32,19 @@
         "source": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-main-35:\\layout\\activity_posting.xml"
     },
     {
-        "merged": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-merged_res-33:\\layout_activity_settings.xml.flat",
-        "source": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-main-35:\\layout\\activity_settings.xml"
-    },
-    {
         "merged": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-merged_res-33:\\layout_item_photo_picker.xml.flat",
         "source": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-main-35:\\layout\\item_photo_picker.xml"
+    },
+    {
+        "merged": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-merged_res-33:\\drawable_ic_launcher.xml.flat",
+        "source": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-main-35:\\drawable\\ic_launcher.xml"
+    },
+    {
+        "merged": "com.example.studylogapp-merged_res-33:/layout_activity_calendar.xml.flat",
+        "source": "com.example.studylogapp-main-35:/layout/activity_calendar.xml"
+    },
+    {
+        "merged": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-merged_res-33:\\layout_activity_settings.xml.flat",
+        "source": "C:\\Users\\xcrui\\.gradle\\daemon\\8.0\\com.example.studylogapp-main-35:\\layout\\activity_settings.xml"
     }
 ]

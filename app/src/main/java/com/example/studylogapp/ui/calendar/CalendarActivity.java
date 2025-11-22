@@ -101,37 +101,72 @@ public class CalendarActivity extends AppCompatActivity {
         btnQuizOption3 = findViewById(R.id.btn_quiz_option3);
         btnQuizOption4 = findViewById(R.id.btn_quiz_option4);
 
+        // 디버깅: 퀴즈 UI 요소들이 제대로 찾아졌는지 확인
+        if (quizContainer == null) {
+            android.util.Log.e("CalendarActivity", "quizContainer를 찾을 수 없습니다!");
+        } else {
+            android.util.Log.d("CalendarActivity", "quizContainer 찾음, 초기 visibility: " + quizContainer.getVisibility());
+            // 초기 상태에서도 보이도록 설정
+            quizContainer.setVisibility(View.VISIBLE);
+        }
+
+        if (tvQuizTitle == null) {
+            android.util.Log.e("CalendarActivity", "tvQuizTitle를 찾을 수 없습니다!");
+        }
+        if (btnQuizOption1 == null) {
+            android.util.Log.e("CalendarActivity", "btnQuizOption1를 찾을 수 없습니다!");
+        }
+
         // 선택지 버튼 클릭 리스너
-        btnQuizOption1.setOnClickListener(v -> onQuizOptionSelected(1));
-        btnQuizOption2.setOnClickListener(v -> onQuizOptionSelected(2));
-        btnQuizOption3.setOnClickListener(v -> onQuizOptionSelected(3));
-        btnQuizOption4.setOnClickListener(v -> onQuizOptionSelected(4));
+        if (btnQuizOption1 != null) {
+            btnQuizOption1.setOnClickListener(v -> onQuizOptionSelected(1));
+        }
+        if (btnQuizOption2 != null) {
+            btnQuizOption2.setOnClickListener(v -> onQuizOptionSelected(2));
+        }
+        if (btnQuizOption3 != null) {
+            btnQuizOption3.setOnClickListener(v -> onQuizOptionSelected(3));
+        }
+        if (btnQuizOption4 != null) {
+            btnQuizOption4.setOnClickListener(v -> onQuizOptionSelected(4));
+        }
     }
 
     private void loadTodayQuiz() {
         String today = DateUtils.formatDate(Calendar.getInstance());
         android.util.Log.d("CalendarActivity", "오늘 날짜: " + today);
         
+        // quizContainer가 null인지 확인
+        if (quizContainer == null) {
+            android.util.Log.e("CalendarActivity", "loadTodayQuiz: quizContainer가 null입니다!");
+            return;
+        }
+        
         currentQuiz = database.getQuizByDate(today);
         
         // 퀴즈 영역은 항상 보이게 설정
         quizContainer.setVisibility(View.VISIBLE);
+        android.util.Log.d("CalendarActivity", "quizContainer visibility 설정: " + quizContainer.getVisibility());
         
         if (currentQuiz != null) {
             displayQuiz(currentQuiz);
             android.util.Log.d("CalendarActivity", "퀴즈 표시됨");
         } else {
             // 퀴즈가 없을 때 안내 메시지 표시
-            tvQuizTitle.setText("오늘의 복습 퀴즈");
-            tvQuizQuestion.setText("아직 퀴즈가 없습니다.\n게시물을 저장하면 퀴즈가 자동으로 생성됩니다.");
+            if (tvQuizTitle != null) {
+                tvQuizTitle.setText("오늘의 복습 퀴즈");
+            }
+            if (tvQuizQuestion != null) {
+                tvQuizQuestion.setText("아직 퀴즈가 없습니다.\n게시물을 저장하면 퀴즈가 자동으로 생성됩니다.");
+            }
             
             // 선택지 버튼 숨기기
-            btnQuizOption1.setVisibility(View.GONE);
-            btnQuizOption2.setVisibility(View.GONE);
-            btnQuizOption3.setVisibility(View.GONE);
-            btnQuizOption4.setVisibility(View.GONE);
-            tvQuizResult.setVisibility(View.GONE);
-            tvQuizExplanation.setVisibility(View.GONE);
+            if (btnQuizOption1 != null) btnQuizOption1.setVisibility(View.GONE);
+            if (btnQuizOption2 != null) btnQuizOption2.setVisibility(View.GONE);
+            if (btnQuizOption3 != null) btnQuizOption3.setVisibility(View.GONE);
+            if (btnQuizOption4 != null) btnQuizOption4.setVisibility(View.GONE);
+            if (tvQuizResult != null) tvQuizResult.setVisibility(View.GONE);
+            if (tvQuizExplanation != null) tvQuizExplanation.setVisibility(View.GONE);
             
             android.util.Log.d("CalendarActivity", "퀴즈 없음 - 안내 메시지 표시");
         }

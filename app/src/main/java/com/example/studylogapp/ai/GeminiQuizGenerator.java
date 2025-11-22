@@ -40,30 +40,65 @@ public class GeminiQuizGenerator {
      * @return 생성된 퀴즈 객체, 실패 시 null
      */
     public Quiz generateQuiz(String imagePath, String summary, String keyword) {
+        Log.d(TAG, "퀴즈 생성 시작 - 이미지: " + imagePath + ", 요약: " + summary + ", 키워드: " + keyword);
+        
         if (API_KEY.equals("YOUR_GEMINI_API_KEY")) {
             Log.e(TAG, "Gemini API 키가 설정되지 않았습니다.");
             return null;
         }
 
         try {
-            // 이미지 로드 및 Base64 인코딩
-            String imageBase64 = encodeImageToBase64(imagePath);
-            if (imageBase64 == null) {
-                Log.e(TAG, "이미지를 로드할 수 없습니다: " + imagePath);
+            String imageBase64 = null;
+            
+            // 이미지가 있으면 인코딩
+            if (imagePath != null && !imagePath.trim().isEmpty()) {
+                imageBase64 = encodeImageToBase64(imagePath);
+                if (imageBase64 == null) {
+                    Log.w(TAG, "이미지를 로드할 수 없습니다: " + imagePath + ", 텍스트만으로 퀴즈 생성 시도");
+                } else {
+                    Log.d(TAG, "이미지 인코딩 완료, 크기: " + imageBase64.length() + " 문자");
+                }
+            } else {
+                Log.d(TAG, "이미지 없음, 텍스트만으로 퀴즈 생성");
+            }
+
+            // summary나 keyword가 없으면 퀴즈 생성 불가
+            if ((summary == null || summary.trim().isEmpty()) && 
+                (keyword == null || keyword.trim().isEmpty()) && 
+                imageBase64 == null) {
+                Log.e(TAG, "퀴즈 생성 불가 - 이미지, 요약, 키워드가 모두 없습니다.");
                 return null;
             }
 
             // 프롬프트 생성
             String prompt = createPrompt(summary, keyword);
+            Log.d(TAG, "프롬프트 생성 완료");
 
             // Gemini API 호출
-            String responseText = callGeminiAPI(prompt, imageBase64);
+            Log.d(TAG, "Gemini API 호출 시작...");
+            String responseText;
+            if (imageBase64 != null) {
+                // 이미지가 있으면 이미지 포함 API 호출
+                responseText = callGeminiAPI(prompt, imageBase64);
+            } else {
+                // 이미지가 없으면 텍스트만으로 API 호출
+                responseText = callGeminiAPITextOnly(prompt);
+            }
+            
             if (responseText == null) {
+                Log.e(TAG, "API 호출 실패 또는 응답이 null입니다.");
                 return null;
             }
+            Log.d(TAG, "API 응답 받음, 길이: " + responseText.length() + " 문자");
 
             // 응답 파싱
-            return parseQuizResponse(responseText);
+            Quiz quiz = parseQuizResponse(responseText);
+            if (quiz != null) {
+                Log.d(TAG, "퀴즈 파싱 성공!");
+            } else {
+                Log.e(TAG, "퀴즈 파싱 실패");
+            }
+            return quiz;
 
         } catch (Exception e) {
             Log.e(TAG, "퀴즈 생성 중 오류 발생", e);
@@ -72,7 +107,79 @@ public class GeminiQuizGenerator {
     }
 
     /**
-     * Gemini API를 호출합니다.
+     * 텍스트만으로 Gemini API를 호출합니다.
+     */
+    private String callGeminiAPITextOnly(String prompt) {
+        try {
+            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + API_KEY);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+
+            // 요청 본문 생성
+            JSONObject requestBody = new JSONObject();
+            JSONObject content = new JSONObject();
+            JSONObject part = new JSONObject();
+            part.put("text", prompt);
+            
+            content.put("parts", new org.json.JSONArray().put(part));
+            requestBody.put("contents", new org.json.JSONArray().put(content));
+
+            // 요청 전송
+            OutputStream os = connection.getOutputStream();
+            os.write(requestBody.toString().getBytes(StandardCharsets.UTF_8));
+            os.flush();
+            os.close();
+
+            // 응답 읽기
+            int responseCode = connection.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                Log.e(TAG, "API 호출 실패: " + responseCode);
+                BufferedReader errorReader = new BufferedReader(
+                    new InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8));
+                StringBuilder errorResponse = new StringBuilder();
+                String line;
+                while ((line = errorReader.readLine()) != null) {
+                    errorResponse.append(line);
+                }
+                errorReader.close();
+                Log.e(TAG, "에러 응답: " + errorResponse.toString());
+                return null;
+            }
+
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+
+            // JSON 응답에서 텍스트 추출
+            JSONObject jsonResponse = new JSONObject(response.toString());
+            if (jsonResponse.has("candidates") && jsonResponse.getJSONArray("candidates").length() > 0) {
+                JSONObject candidate = jsonResponse.getJSONArray("candidates").getJSONObject(0);
+                if (candidate.has("content") && candidate.getJSONObject("content").has("parts")) {
+                    JSONObject responsePart = candidate.getJSONObject("content")
+                        .getJSONArray("parts").getJSONObject(0);
+                    if (responsePart.has("text")) {
+                        return responsePart.getString("text");
+                    }
+                }
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            Log.e(TAG, "API 호출 중 오류 발생", e);
+            return null;
+        }
+    }
+
+    /**
+     * 이미지와 텍스트로 Gemini API를 호출합니다.
      */
     private String callGeminiAPI(String prompt, String imageBase64) {
         try {
@@ -175,21 +282,35 @@ public class GeminiQuizGenerator {
      * 프롬프트를 생성합니다.
      */
     private String createPrompt(String summary, String keyword) {
-        return "다음 학습 내용을 기반으로 간단한 복습용 객관식 퀴즈를 만들어주세요.\n\n" +
-                "요약: " + summary + "\n" +
-                "키워드: " + keyword + "\n\n" +
-                "다음 형식으로 JSON 형태로 응답해주세요:\n" +
-                "{\n" +
-                "  \"question\": \"퀴즈 문제\",\n" +
-                "  \"option1\": \"선택지 1\",\n" +
-                "  \"option2\": \"선택지 2\",\n" +
-                "  \"option3\": \"선택지 3\",\n" +
-                "  \"option4\": \"선택지 4\",\n" +
-                "  \"correctAnswer\": 1,\n" +
-                "  \"explanation\": \"정답 설명\"\n" +
-                "}\n\n" +
-                "문제는 간단하고 명확하게, 선택지는 모두 그럴듯하게 만들어주세요. " +
-                "correctAnswer는 1, 2, 3, 4 중 하나의 숫자입니다.";
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("이 이미지와 학습 내용을 기반으로 간단한 복습용 객관식 퀴즈를 만들어주세요.\n\n");
+        
+        if (summary != null && !summary.trim().isEmpty()) {
+            prompt.append("요약: ").append(summary).append("\n");
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            prompt.append("키워드: ").append(keyword).append("\n");
+        }
+        
+        if ((summary == null || summary.trim().isEmpty()) && 
+            (keyword == null || keyword.trim().isEmpty())) {
+            prompt.append("이미지를 분석하여 학습 내용을 파악한 후 퀴즈를 만들어주세요.\n");
+        }
+        
+        prompt.append("\n다음 형식으로 JSON 형태로 응답해주세요:\n");
+        prompt.append("{\n");
+        prompt.append("  \"question\": \"퀴즈 문제\",\n");
+        prompt.append("  \"option1\": \"선택지 1\",\n");
+        prompt.append("  \"option2\": \"선택지 2\",\n");
+        prompt.append("  \"option3\": \"선택지 3\",\n");
+        prompt.append("  \"option4\": \"선택지 4\",\n");
+        prompt.append("  \"correctAnswer\": 1,\n");
+        prompt.append("  \"explanation\": \"정답 설명\"\n");
+        prompt.append("}\n\n");
+        prompt.append("문제는 간단하고 명확하게, 선택지는 모두 그럴듯하게 만들어주세요. ");
+        prompt.append("correctAnswer는 1, 2, 3, 4 중 하나의 숫자입니다.");
+        
+        return prompt.toString();
     }
 
 
