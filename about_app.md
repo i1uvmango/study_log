@@ -45,7 +45,8 @@ mobile-programming-study_log/
 │   │       │   │
 │   │       │   ├── model/                 # 데이터 모델
 │   │       │   │   ├── StudyLog.java      # 학습 로그 엔티티
-│   │       │   │   └── StudyPost.java     # 학습 게시물 엔티티
+│   │       │   │   ├── StudyPost.java     # 학습 게시물 엔티티
+│   │       │   │   └── Quiz.java          # 퀴즈 엔티티
 │   │       │   │
 │   │       │   ├── database/              # 데이터베이스 관련
 │   │       │   │   ├── DatabaseHelper.java # SQLite 헬퍼
@@ -57,6 +58,9 @@ mobile-programming-study_log/
 │   │       │   ├── alarm/                 # 알람 관련
 │   │       │   │   ├── AlarmManagerHelper.java
 │   │       │   │   └── AlarmReceiver.java
+│   │       │   │
+│   │       │   ├── ai/                    # AI 관련
+│   │       │   │   └── GeminiQuizGenerator.java # Gemini API를 이용한 퀴즈 생성
 │   │       │   │
 │   │       │   └── utils/                 # 유틸리티 클래스
 │   │       │       ├── DateUtils.java
@@ -99,8 +103,8 @@ mobile-programming-study_log/
 | 파일명 | 역할 |
 |--------|------|
 | `MainActivity.java` | 앱의 진입점으로, 캘린더와 설정 화면으로 이동하는 메인 메뉴를 제공 |
-| `CalendarActivity.java` | 월별 캘린더를 표시하고, 날짜 클릭 시 게시물 작성/조회 화면으로 전환 |
-| `PostingActivity.java` | 사진 추가, 요약/키워드 입력을 통해 학습 로그를 작성하는 화면 |
+| `CalendarActivity.java` | 월별 캘린더를 표시하고, 날짜 클릭 시 게시물 작성/조회 화면으로 전환. 오늘의 퀴즈 표시 및 풀이 기능 제공 |
+| `PostingActivity.java` | 사진 추가, 요약/키워드 입력을 통해 학습 로그를 작성하는 화면. 게시물 저장 시 자동으로 AI 퀴즈 생성 |
 | `SlideViewerActivity.java` | 저장된 게시물을 슬라이드 형태로 조회하고, 수정/삭제 기능 제공 |
 | `SettingsActivity.java` | 알람 시간 설정 및 데이터 초기화 기능 제공 |
 
@@ -125,6 +129,7 @@ mobile-programming-study_log/
 |--------|------|
 | `StudyLog.java` | 날짜별 학습 로그의 메타데이터를 저장하는 엔티티 (날짜, 생성/수정 시간) |
 | `StudyPost.java` | 개별 게시물 정보를 저장하는 엔티티 (사진 URI, 요약, 키워드, 순서) |
+| `Quiz.java` | AI 생성 퀴즈 정보를 저장하는 엔티티 (문제, 선택지 4개, 정답, 설명) |
 | `CalendarDay.java` | 캘린더 셀의 표시 정보를 담는 데이터 클래스 |
 | `PhotoItem.java` | 게시물 작성 중 임시로 관리하는 사진 아이템 데이터 클래스 |
 
@@ -132,8 +137,8 @@ mobile-programming-study_log/
 
 | 파일명 | 역할 |
 |--------|------|
-| `DatabaseHelper.java` | SQLite 데이터베이스 생성 및 스키마 관리 (StudyLog, StudyPost 테이블) |
-| `AppDatabase.java` | 데이터베이스 CRUD 작업을 캡슐화한 래퍼 클래스 |
+| `DatabaseHelper.java` | SQLite 데이터베이스 생성 및 스키마 관리 (StudyLog, StudyPost, Quiz 테이블) |
+| `AppDatabase.java` | 데이터베이스 CRUD 작업을 캡슐화한 래퍼 클래스 (StudyLog, StudyPost, Quiz) |
 
 ### 2.6 Utility 클래스
 
@@ -144,6 +149,7 @@ mobile-programming-study_log/
 | `ImageStorageManager.java` | 이미지 파일 저장, 로드, 삭제를 관리하는 스토리지 매니저 |
 | `AlarmManagerHelper.java` | 일일 알람 스케줄링 및 설정 관리 (SharedPreferences 사용) |
 | `AlarmReceiver.java` | 알람 수신 시 게시물 작성 화면을 자동으로 열어주는 BroadcastReceiver |
+| `GeminiQuizGenerator.java` | Google Gemini API를 활용하여 게시물 기반 퀴즈를 자동 생성하는 클래스 |
 
 ---
 
@@ -216,6 +222,7 @@ CalendarActivity.onCreate() 호출
 - **구조**:
   - `LinearLayout (horizontal)`: 이전/다음 월 버튼과 월/년도 텍스트
   - `RecyclerView (recycler_calendar)`: 7열 그리드로 캘린더 날짜 표시
+  - `LinearLayout (quiz_container)`: 오늘의 퀴즈 영역 (문제, 선택지 4개, 결과, 설명)
 
 #### 3.2.2 주요 기능 및 코드 흐름
 
@@ -268,6 +275,10 @@ CalendarActivity.onCreate() 호출
         });
 
         updateCalendar();
+        
+        // 퀴즈 UI 초기화 및 오늘의 퀴즈 로드
+        initQuizUI();
+        loadTodayQuiz();
     }
 ```
 
@@ -277,6 +288,8 @@ CalendarActivity.onCreate() 호출
 3. RecyclerView 설정: `GridLayoutManager`로 7열 그리드 구성
 4. Adapter 설정: `CalendarAdapter` 생성 및 데이터베이스 전달
 5. 날짜 클릭 리스너 등록: `setOnDateClickListener()`로 날짜 클릭 시 동작 정의
+6. 퀴즈 UI 초기화: `initQuizUI()`로 퀴즈 관련 UI 요소 초기화
+7. 오늘의 퀴즈 로드: `loadTodayQuiz()`로 오늘 날짜의 퀴즈 조회 및 표시
 
 **2. 날짜 클릭 이벤트 처리 흐름**
 
@@ -388,6 +401,50 @@ adapter.updateMonth() 호출
 CalendarAdapter.generateDays() 재실행
     ↓
 adapter.notifyDataSetChanged()로 RecyclerView 갱신
+```
+
+**5. 퀴즈 기능**
+
+**퀴즈 로드 및 표시:**
+```
+CalendarActivity.onCreate()에서 loadTodayQuiz() 호출
+    ↓
+오늘 날짜 문자열 생성 (DateUtils.formatDate())
+    ↓
+database.getQuizByDate(today)로 퀴즈 조회
+    ↓
+조건 분기:
+    ├─ 퀴즈 있음:
+    │   └─ displayQuiz(quiz) 호출
+    │       ├─ 문제, 선택지 4개 표시
+    │       ├─ 선택지 버튼 클릭 리스너 등록
+    │       └─ isQuizAnswered = false 설정
+    │
+    └─ 퀴즈 없음:
+        └─ 안내 메시지 표시 ("아직 퀴즈가 없습니다...")
+```
+
+**퀴즈 풀이 흐름:**
+```
+사용자가 선택지 버튼 클릭
+    ↓
+onQuizOptionSelected(selectedOption) 호출
+    ↓
+isQuizAnswered 체크 → 이미 답변했으면 무시
+    ↓
+isQuizAnswered = true 설정
+    ↓
+정답 여부 확인:
+    ├─ 정답인 경우:
+    │   ├─ 선택한 버튼 배경색 변경 (초록색)
+    │   ├─ tvQuizResult에 "정답입니다!" 표시
+    │   └─ tvQuizExplanation에 설명 표시
+    │
+    └─ 오답인 경우:
+        ├─ 선택한 버튼 배경색 변경 (빨간색)
+        ├─ 정답 버튼 배경색 변경 (초록색)
+        ├─ tvQuizResult에 "오답입니다" 표시
+        └─ tvQuizExplanation에 설명 표시
 ```
 
 ---
@@ -647,7 +704,8 @@ savePost() 호출
 photoItems.isEmpty() 체크 → 비어있으면 Toast 후 종료
     ↓
 기존 게시물이 있으면 (existingLogId != -1):
-    └─ database.deleteAllPostsByLogId()로 기존 게시물 삭제
+    ├─ database.deleteAllPostsByLogId()로 기존 게시물 삭제
+    └─ database.deleteQuizByLogId()로 기존 퀴즈 삭제
     ↓
 database.getOrCreateStudyLogId(selectedDate)로 StudyLog ID 획득
     ├─ 기존 로그 있음 → 기존 ID 반환
@@ -657,6 +715,19 @@ photoItems 반복:
     ├─ PhotoItem에서 imagePath, summary, keyword 추출
     ├─ StudyPost 객체 생성 (logId, imagePath, summary, keyword, order)
     └─ database.insertStudyPost(post)로 DB 저장
+    ↓
+퀴즈 생성 (첫 번째 게시물 기반):
+    ├─ 첫 번째 PhotoItem의 imagePath, summary, keyword 추출
+    ├─ generateQuizAsync() 호출 (별도 스레드에서 실행)
+    │   ├─ GeminiQuizGenerator 생성
+    │   ├─ generator.generateQuiz() 호출
+    │   │   ├─ 이미지 Base64 인코딩 (있는 경우)
+    │   │   ├─ 프롬프트 생성
+    │   │   ├─ Gemini API 호출 (이미지 포함 또는 텍스트만)
+    │   │   └─ 응답 파싱하여 Quiz 객체 생성
+    │   ├─ quiz.setStudyLogId(logId) 설정
+    │   └─ database.insertQuiz(quiz)로 DB 저장
+    └─ UI 스레드에서 Toast 표시
     ↓
 Toast 표시
     ↓
@@ -1028,6 +1099,7 @@ AlertDialog 표시
     ↓
 database.clearAllData() 호출
     ├─ StudyPost 테이블 전체 삭제
+    ├─ Quiz 테이블 전체 삭제
     └─ StudyLog 테이블 전체 삭제
     ↓
 Toast 표시
@@ -1062,6 +1134,22 @@ CREATE TABLE StudyPost (
 )
 ```
 
+**Quiz 테이블:**
+```sql
+CREATE TABLE Quiz (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    studyLogId INTEGER NOT NULL,
+    question TEXT NOT NULL,
+    option1 TEXT NOT NULL,
+    option2 TEXT NOT NULL,
+    option3 TEXT NOT NULL,
+    option4 TEXT NOT NULL,
+    correctAnswer INTEGER NOT NULL,
+    explanation TEXT,
+    FOREIGN KEY(studyLogId) REFERENCES StudyLog(id) ON DELETE CASCADE
+)
+```
+
 ### 4.2 데이터 저장 흐름
 
 ```
@@ -1080,6 +1168,17 @@ PostingActivity.savePost()
     ↓
 3. 이미지 파일은 ImageStorageManager로 별도 저장
     └─ 파일 경로만 DB에 저장
+    ↓
+4. 퀴즈 생성 (비동기)
+    └─ generateQuizAsync() 호출
+        ├─ ExecutorService로 별도 스레드 실행
+        ├─ GeminiQuizGenerator.generateQuiz() 호출
+        │   ├─ 이미지 Base64 인코딩 (있는 경우)
+        │   ├─ 프롬프트 생성 (요약, 키워드 포함)
+        │   ├─ Gemini API 호출 (gemini-pro-vision 또는 gemini-pro)
+        │   └─ JSON 응답 파싱하여 Quiz 객체 생성
+        ├─ quiz.setStudyLogId(logId) 설정
+        └─ AppDatabase.insertQuiz()로 DB 저장
 ```
 
 ### 4.3 데이터 조회 흐름
@@ -1096,6 +1195,21 @@ AppDatabase.getPostsByDate()
     ↓
 게시물 있음 → SlideViewerActivity로 전환
 게시물 없음 → PostingActivity로 전환
+```
+
+**퀴즈 조회 흐름:**
+```
+CalendarActivity.onCreate()에서 loadTodayQuiz() 호출
+    ↓
+오늘 날짜 문자열 생성 (DateUtils.formatDate())
+    ↓
+AppDatabase.getQuizByDate(today) 호출
+    ├─ getStudyLogByDate(today)로 StudyLog 조회
+    └─ getQuizByLogId(logId)로 Quiz 조회
+        └─ Cursor로 쿼리 실행 → cursorToQuiz()로 객체 변환
+    ↓
+퀴즈 있음 → displayQuiz()로 UI에 표시
+퀴즈 없음 → 안내 메시지 표시
 ```
 
 ### 4.4 이미지 저장소 구조
@@ -1273,13 +1387,17 @@ openCamera()
 - **BroadcastReceiver**: 알람 수신
 
 ### 6.2 외부 라이브러리
-- **Glide**: 이미지 로딩 및 캐싱
+- **Glide 4.16.0**: 이미지 로딩 및 캐싱
+- **Google Gemini API (generativeai 0.2.2)**: AI 퀴즈 생성 (선택적 사용)
+- **OkHttp 4.12.0**: HTTP 클라이언트 (Gemini API 호출용)
+- **Material Design Components 1.11.0**: Material Design UI 컴포넌트
 
 ### 6.3 권한 관리
 - **CAMERA**: 카메라 촬영
 - **READ_EXTERNAL_STORAGE / READ_MEDIA_IMAGES**: 갤러리 접근
 - **SCHEDULE_EXACT_ALARM**: 정확한 알람 스케줄링
 - **POST_NOTIFICATIONS**: 알림 표시
+- **인터넷**: Gemini API 호출 (퀴즈 생성 기능 사용 시)
 
 ---
 
@@ -1411,11 +1529,17 @@ Fragment의 onCreateView() 실행
 
 이 앱은 **학습 로그를 날짜별로 관리하는 캘린더 기반 앱**으로, 다음과 같은 특징을 가집니다:
 
-1. **계층적 데이터 구조**: StudyLog (날짜) → StudyPost (게시물)
+1. **계층적 데이터 구조**: StudyLog (날짜) → StudyPost (게시물) → Quiz (퀴즈)
 2. **이미지 관리**: 외부 저장소에 파일로 저장, DB에는 경로만 저장
-3. **사용자 경험**: 캘린더에서 날짜 클릭 시 자동으로 작성/조회 화면 전환
-4. **알람 시스템**: 일일 알람으로 학습 습관 형성 지원
-5. **권한 관리**: 런타임 권한 요청으로 사용자 친화적 구현
+3. **AI 기반 퀴즈 생성**: Google Gemini API를 활용하여 게시물 기반 복습 퀴즈 자동 생성
+4. **사용자 경험**: 캘린더에서 날짜 클릭 시 자동으로 작성/조회 화면 전환
+5. **알람 시스템**: 일일 알람으로 학습 습관 형성 지원
+6. **권한 관리**: 런타임 권한 요청으로 사용자 친화적 구현
 
-각 화면은 **Intent를 통한 명시적 화면 전환**을 사용하며, **데이터베이스와 이미지 저장소를 분리**하여 관리합니다. **RecyclerView와 ViewPager2를 활용**한 효율적인 UI 구성으로 사용자 경험을 최적화했습니다.
+각 화면은 **Intent를 통한 명시적 화면 전환**을 사용하며, **데이터베이스와 이미지 저장소를 분리**하여 관리합니다. **RecyclerView와 ViewPager2를 활용**한 효율적인 UI 구성으로 사용자 경험을 최적화했습니다. **Gemini AI를 통한 퀴즈 생성 기능**으로 학습 내용을 더 효과적으로 복습할 수 있도록 지원합니다.
+
+### 주요 개선 사항
+- **AI 퀴즈 생성**: 게시물 저장 시 자동으로 복습용 퀴즈 생성
+- **퀴즈 풀이 기능**: CalendarActivity에서 오늘의 퀴즈를 풀고 정답 확인 가능
+- **비동기 처리**: 퀴즈 생성은 별도 스레드에서 실행되어 UI 블로킹 방지
 

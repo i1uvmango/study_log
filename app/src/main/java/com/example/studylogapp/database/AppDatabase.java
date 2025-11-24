@@ -192,6 +192,17 @@ public class AppDatabase {
 
     // Quiz CRUD
     public long insertQuiz(Quiz quiz) {
+        android.util.Log.d("AppDatabase", "========== 퀴즈 저장 시작 ==========");
+        android.util.Log.d("AppDatabase", "Quiz 정보:");
+        android.util.Log.d("AppDatabase", "  - StudyLogId: " + quiz.getStudyLogId());
+        android.util.Log.d("AppDatabase", "  - 문제: " + quiz.getQuestion());
+        android.util.Log.d("AppDatabase", "  - 선택지1: " + quiz.getOption1());
+        android.util.Log.d("AppDatabase", "  - 선택지2: " + quiz.getOption2());
+        android.util.Log.d("AppDatabase", "  - 선택지3: " + quiz.getOption3());
+        android.util.Log.d("AppDatabase", "  - 선택지4: " + quiz.getOption4());
+        android.util.Log.d("AppDatabase", "  - 정답: " + quiz.getCorrectAnswer());
+        android.util.Log.d("AppDatabase", "  - 설명: " + quiz.getExplanation());
+        
         ContentValues values = new ContentValues();
         values.put(DatabaseHelper.COLUMN_QUIZ_STUDY_LOG_ID, quiz.getStudyLogId());
         values.put(DatabaseHelper.COLUMN_QUIZ_QUESTION, quiz.getQuestion());
@@ -201,10 +212,19 @@ public class AppDatabase {
         values.put(DatabaseHelper.COLUMN_QUIZ_OPTION4, quiz.getOption4());
         values.put(DatabaseHelper.COLUMN_QUIZ_CORRECT_ANSWER, quiz.getCorrectAnswer());
         values.put(DatabaseHelper.COLUMN_QUIZ_EXPLANATION, quiz.getExplanation());
-        return database.insert(DatabaseHelper.TABLE_QUIZ, null, values);
+        
+        long quizId = database.insert(DatabaseHelper.TABLE_QUIZ, null, values);
+        if (quizId > 0) {
+            android.util.Log.d("AppDatabase", "✅ 퀴즈 저장 성공! quizId: " + quizId);
+        } else {
+            android.util.Log.e("AppDatabase", "❌ 퀴즈 저장 실패! quizId: " + quizId);
+        }
+        android.util.Log.d("AppDatabase", "========== 퀴즈 저장 완료 ==========");
+        return quizId;
     }
 
     public Quiz getQuizByLogId(long logId) {
+        android.util.Log.d("AppDatabase", "getQuizByLogId 호출 - logId: " + logId);
         Cursor cursor = database.query(
             DatabaseHelper.TABLE_QUIZ,
             null,
@@ -214,19 +234,32 @@ public class AppDatabase {
         );
 
         Quiz quiz = null;
-        if (cursor != null && cursor.moveToFirst()) {
-            quiz = cursorToQuiz(cursor);
+        if (cursor != null) {
+            android.util.Log.d("AppDatabase", "Quiz 테이블 조회 결과 - row count: " + cursor.getCount());
+            if (cursor.moveToFirst()) {
+                quiz = cursorToQuiz(cursor);
+                android.util.Log.d("AppDatabase", "Quiz 객체 생성 완료 - id: " + quiz.getId() + ", question: " + quiz.getQuestion());
+            } else {
+                android.util.Log.d("AppDatabase", "Quiz 테이블에 해당 logId의 데이터 없음");
+            }
             cursor.close();
+        } else {
+            android.util.Log.e("AppDatabase", "Quiz 테이블 조회 실패 - cursor가 null");
         }
         return quiz;
     }
 
     public Quiz getQuizByDate(String date) {
+        android.util.Log.d("AppDatabase", "getQuizByDate 호출 - date: " + date);
         StudyLog log = getStudyLogByDate(date);
         if (log == null) {
+            android.util.Log.d("AppDatabase", "StudyLog 없음 - date: " + date);
             return null;
         }
-        return getQuizByLogId(log.getId());
+        android.util.Log.d("AppDatabase", "StudyLog 찾음 - id: " + log.getId() + ", date: " + log.getDate());
+        Quiz quiz = getQuizByLogId(log.getId());
+        android.util.Log.d("AppDatabase", "Quiz 조회 결과: " + (quiz != null ? "있음 (id: " + quiz.getId() + ")" : "없음"));
+        return quiz;
     }
 
     public void deleteQuizByLogId(long logId) {

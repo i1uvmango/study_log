@@ -134,6 +134,7 @@ public class CalendarActivity extends AppCompatActivity {
 
     private void loadTodayQuiz() {
         String today = DateUtils.formatDate(Calendar.getInstance());
+        android.util.Log.d("CalendarActivity", "========== 퀴즈 로드 시작 ==========");
         android.util.Log.d("CalendarActivity", "오늘 날짜: " + today);
         
         // quizContainer가 null인지 확인
@@ -142,7 +143,33 @@ public class CalendarActivity extends AppCompatActivity {
             return;
         }
         
+        // 데이터베이스에서 StudyLog 먼저 확인
+        com.example.studylogapp.model.StudyLog log = database.getStudyLogByDate(today);
+        android.util.Log.d("CalendarActivity", "StudyLog 조회 결과: " + (log != null ? "있음 (id: " + log.getId() + ")" : "없음"));
+        
+        // 퀴즈 조회
         currentQuiz = database.getQuizByDate(today);
+        android.util.Log.d("CalendarActivity", "퀴즈 조회 결과: " + (currentQuiz != null ? "있음" : "없음"));
+        
+        if (currentQuiz != null) {
+            android.util.Log.d("CalendarActivity", "퀴즈 상세 정보:");
+            android.util.Log.d("CalendarActivity", "  - ID: " + currentQuiz.getId());
+            android.util.Log.d("CalendarActivity", "  - StudyLogId: " + currentQuiz.getStudyLogId());
+            android.util.Log.d("CalendarActivity", "  - 문제: " + currentQuiz.getQuestion());
+            android.util.Log.d("CalendarActivity", "  - 선택지1: " + currentQuiz.getOption1());
+            android.util.Log.d("CalendarActivity", "  - 선택지2: " + currentQuiz.getOption2());
+            android.util.Log.d("CalendarActivity", "  - 선택지3: " + currentQuiz.getOption3());
+            android.util.Log.d("CalendarActivity", "  - 선택지4: " + currentQuiz.getOption4());
+            android.util.Log.d("CalendarActivity", "  - 정답: " + currentQuiz.getCorrectAnswer());
+            android.util.Log.d("CalendarActivity", "  - 설명: " + currentQuiz.getExplanation());
+        } else {
+            // 퀴즈가 없는 경우, 데이터베이스에 퀴즈가 있는지 전체 확인
+            android.util.Log.d("CalendarActivity", "오늘 날짜의 퀴즈가 없습니다. 데이터베이스 전체 확인 중...");
+            if (log != null) {
+                Quiz quizByLogId = database.getQuizByLogId(log.getId());
+                android.util.Log.d("CalendarActivity", "logId(" + log.getId() + ")로 직접 조회: " + (quizByLogId != null ? "있음" : "없음"));
+            }
+        }
         
         // 퀴즈 영역은 항상 보이게 설정
         quizContainer.setVisibility(View.VISIBLE);
@@ -150,7 +177,7 @@ public class CalendarActivity extends AppCompatActivity {
         
         if (currentQuiz != null) {
             displayQuiz(currentQuiz);
-            android.util.Log.d("CalendarActivity", "퀴즈 표시됨");
+            android.util.Log.d("CalendarActivity", "✅ 퀴즈 표시 완료");
         } else {
             // 퀴즈가 없을 때 안내 메시지 표시
             if (tvQuizTitle != null) {
@@ -168,8 +195,9 @@ public class CalendarActivity extends AppCompatActivity {
             if (tvQuizResult != null) tvQuizResult.setVisibility(View.GONE);
             if (tvQuizExplanation != null) tvQuizExplanation.setVisibility(View.GONE);
             
-            android.util.Log.d("CalendarActivity", "퀴즈 없음 - 안내 메시지 표시");
+            android.util.Log.d("CalendarActivity", "❌ 퀴즈 없음 - 안내 메시지 표시");
         }
+        android.util.Log.d("CalendarActivity", "========== 퀴즈 로드 완료 ==========");
     }
 
     private void displayQuiz(Quiz quiz) {
@@ -281,6 +309,54 @@ public class CalendarActivity extends AppCompatActivity {
         // 퀴즈 다시 로드 (새로 생성되었을 수 있음)
         loadTodayQuiz();
     }
+    
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // 퀴즈 생성 완료 Broadcast 수신을 위한 Receiver 등록
+        // Android 13+ (API 33+)에서는 RECEIVER_EXPORTED 또는 RECEIVER_NOT_EXPORTED 플래그 필요
+        android.content.IntentFilter filter = new android.content.IntentFilter("com.example.studylogapp.QUIZ_CREATED");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(quizCreatedReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(quizCreatedReceiver, filter);
+        }
+    }
+    
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Receiver 해제
+        try {
+            unregisterReceiver(quizCreatedReceiver);
+        } catch (Exception e) {
+            // Receiver가 등록되지 않았을 수 있음
+        }
+    }
+    
+    // 퀴즈 생성 완료 Broadcast Receiver
+    private android.content.BroadcastReceiver quizCreatedReceiver = new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(android.content.Context context, android.content.Intent intent) {
+            android.util.Log.d("CalendarActivity", "========== Broadcast 수신 ==========");
+            String date = intent.getStringExtra("date");
+            String today = DateUtils.formatDate(Calendar.getInstance());
+            android.util.Log.d("CalendarActivity", "퀴즈 생성 Broadcast 수신 - date: " + date + ", today: " + today);
+            
+            // 오늘 날짜의 퀴즈가 생성되었으면 새로고침
+            if (today.equals(date)) {
+                android.util.Log.d("CalendarActivity", "✅ 날짜 일치! 오늘의 퀴즈가 생성되었으므로 새로고침");
+                // 약간의 지연을 두고 새로고침 (데이터베이스 쓰기 완료 대기)
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    android.util.Log.d("CalendarActivity", "Broadcast 수신 후 퀴즈 새로고침 실행");
+                    loadTodayQuiz();
+                }, 500);
+            } else {
+                android.util.Log.d("CalendarActivity", "날짜 불일치 - date: " + date + ", today: " + today);
+            }
+            android.util.Log.d("CalendarActivity", "========== Broadcast 처리 완료 ==========");
+        }
+    };
 
     @Override
     protected void onDestroy() {

@@ -6,12 +6,38 @@ android {
     namespace 'com.example.studylogapp'
     compileSdk 34
 
+    // local.properties 파일 읽기
+    def localProperties = new Properties()
+    def localPropertiesFile = rootProject.file('local.properties')
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.withInputStream { localProperties.load(it) }
+        def apiKey = localProperties.getProperty('GEMINI_API_KEY', '')
+        if (apiKey.isEmpty()) {
+            println "⚠️ WARNING: GEMINI_API_KEY가 local.properties에 없습니다!"
+        } else {
+            println "✅ GEMINI_API_KEY를 local.properties에서 읽었습니다 (길이: ${apiKey.length()})"
+        }
+    } else {
+        println "❌ ERROR: local.properties 파일을 찾을 수 없습니다!"
+    }
+
     defaultConfig {
         applicationId "com.example.studylogapp"
         minSdk 24
         targetSdk 34
         versionCode 1
         versionName "1.0"
+        
+        // BuildConfig에 API 키 주입
+        def apiKeyValue = localProperties.getProperty('GEMINI_API_KEY', '')
+        buildConfigField "String", "GEMINI_API_KEY", "\"${apiKeyValue}\""
+        
+        // 디버깅: 주입된 값 확인
+        if (apiKeyValue.isEmpty()) {
+            println "⚠️ WARNING: BuildConfig에 빈 API 키가 주입됩니다!"
+        } else {
+            println "✅ BuildConfig에 API 키 주입 완료"
+        }
     }
 
     buildTypes {
@@ -19,6 +45,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    
+    // BuildConfig 생성 활성화
+    buildFeatures {
+        buildConfig true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -52,6 +83,14 @@ dependencies {
     
     // HTTP Client for API calls
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    
+    // Retrofit & OkHttp
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    
+    // Gson
+    implementation 'com.google.code.gson:gson:2.10.1'
 }
 
 

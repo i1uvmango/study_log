@@ -89,7 +89,15 @@ public class PostingActivity extends AppCompatActivity {
         loadExistingData();
 
         btnAddPhoto.setOnClickListener(v -> showPhotoSourceDialog());
-        btnSave.setOnClickListener(v -> savePost());
+        btnSave.setOnClickListener(v -> {
+            android.util.Log.d("PostingActivity", "🔵 저장 버튼 클릭됨!");
+            if (btnSave == null) {
+                android.util.Log.e("PostingActivity", "❌ btnSave가 null입니다!");
+            } else {
+                android.util.Log.d("PostingActivity", "✅ btnSave 정상, savePost() 호출");
+            }
+            savePost();
+        });
         btnCancel.setOnClickListener(v -> finish());
 
         adapter.setOnDeleteListener(position -> {
@@ -222,13 +230,22 @@ public class PostingActivity extends AppCompatActivity {
     }
 
     private void savePost() {
+        android.util.Log.d("PostingActivity", "========== savePost() 호출됨 ==========");
+        android.util.Log.d("PostingActivity", "photoItems 크기: " + photoItems.size());
+        android.util.Log.d("PostingActivity", "selectedDate: " + selectedDate);
+        
         if (photoItems.isEmpty()) {
+            android.util.Log.w("PostingActivity", "❌ photoItems가 비어있어서 저장 취소");
             Toast.makeText(this, R.string.photo_required, Toast.LENGTH_SHORT).show();
             return;
         }
 
+        android.util.Log.d("PostingActivity", "✅ photoItems 있음, 저장 진행");
+        
         // 저장 전에 모든 PhotoItem의 summary와 keyword를 강제로 업데이트
+        android.util.Log.d("PostingActivity", "updateAllPhotoItems() 호출 시작");
         updateAllPhotoItems();
+        android.util.Log.d("PostingActivity", "updateAllPhotoItems() 호출 완료");
 
         // 기존 게시물 삭제
         if (existingLogId != -1) {
@@ -246,22 +263,42 @@ public class PostingActivity extends AppCompatActivity {
         }
 
         // 퀴즈 생성 (첫 번째 게시물을 기반으로)
+        android.util.Log.d("PostingActivity", "========== 퀴즈 생성 체크 시작 ==========");
+        android.util.Log.d("PostingActivity", "photoItems 크기: " + photoItems.size());
+        
         if (!photoItems.isEmpty()) {
             PhotoItem firstItem = photoItems.get(0);
             String imagePath = firstItem.getImagePath();
             String summary = firstItem.getSummary();
             String keyword = firstItem.getKeyword();
             
+            android.util.Log.d("PostingActivity", "첫 번째 아이템 정보:");
+            android.util.Log.d("PostingActivity", "  - 이미지 경로: " + (imagePath != null ? imagePath : "null"));
+            android.util.Log.d("PostingActivity", "  - 요약: [" + (summary != null ? summary : "null") + "]");
+            android.util.Log.d("PostingActivity", "  - 키워드: [" + (keyword != null ? keyword : "null") + "]");
+            
             // 이미지가 없어도 summary나 keyword가 있으면 퀴즈 생성 가능
-            if (imagePath != null || (summary != null && !summary.trim().isEmpty()) || 
-                (keyword != null && !keyword.trim().isEmpty())) {
+            boolean hasImage = imagePath != null && !imagePath.trim().isEmpty();
+            boolean hasSummary = summary != null && !summary.trim().isEmpty();
+            boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+            
+            android.util.Log.d("PostingActivity", "조건 체크:");
+            android.util.Log.d("PostingActivity", "  - 이미지 있음: " + hasImage);
+            android.util.Log.d("PostingActivity", "  - 요약 있음: " + hasSummary);
+            android.util.Log.d("PostingActivity", "  - 키워드 있음: " + hasKeyword);
+            
+            if (hasImage || hasSummary || hasKeyword) {
+                android.util.Log.d("PostingActivity", "✅ 퀴즈 생성 조건 만족! 퀴즈 생성 시작");
                 android.util.Log.d("PostingActivity", "퀴즈 생성 시작 - 이미지: " + imagePath + 
                     ", 요약: " + summary + ", 키워드: " + keyword);
                 generateQuizAsync(logId, imagePath, summary, keyword);
             } else {
-                android.util.Log.w("PostingActivity", "퀴즈 생성 불가 - 이미지, 요약, 키워드가 모두 없습니다.");
+                android.util.Log.w("PostingActivity", "❌ 퀴즈 생성 불가 - 이미지, 요약, 키워드가 모두 없습니다.");
             }
+        } else {
+            android.util.Log.w("PostingActivity", "❌ photoItems가 비어있습니다. 퀴즈 생성 불가.");
         }
+        android.util.Log.d("PostingActivity", "========== 퀴즈 생성 체크 완료 ==========");
 
         Toast.makeText(this, R.string.save, Toast.LENGTH_SHORT).show();
         setResult(RESULT_OK);
@@ -269,19 +306,40 @@ public class PostingActivity extends AppCompatActivity {
     }
 
     private void updateAllPhotoItems() {
-        // RecyclerView의 모든 ViewHolder에서 현재 입력된 값을 가져와서 PhotoItem에 저장
+        // 모든 ViewHolder에서 현재 입력된 값을 가져와서 PhotoItem에 저장
+        // RecyclerView의 getChildCount()는 현재 보이는 아이템만 반환하므로
+        // 각 child view의 position을 정확히 찾아서 업데이트
         for (int i = 0; i < recyclerView.getChildCount(); i++) {
             View childView = recyclerView.getChildAt(i);
             if (childView != null) {
                 android.widget.EditText etSummary = childView.findViewById(R.id.et_summary);
                 android.widget.EditText etKeyword = childView.findViewById(R.id.et_keyword);
                 
-                if (etSummary != null && etKeyword != null && i < photoItems.size()) {
-                    PhotoItem item = photoItems.get(i);
-                    item.setSummary(etSummary.getText().toString());
-                    item.setKeyword(etKeyword.getText().toString());
+                if (etSummary != null && etKeyword != null) {
+                    // ViewHolder의 position 가져오기
+                    RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(childView);
+                    if (viewHolder != null) {
+                        int position = viewHolder.getAdapterPosition();
+                        // RecyclerView.NO_POSITION 체크
+                        if (position >= 0 && position < photoItems.size()) {
+                            PhotoItem item = photoItems.get(position);
+                            String summary = etSummary.getText().toString();
+                            String keyword = etKeyword.getText().toString();
+                            item.setSummary(summary);
+                            item.setKeyword(keyword);
+                            android.util.Log.d("PostingActivity", "아이템 " + position + " 업데이트 - 요약: [" + 
+                                summary + "], 키워드: [" + keyword + "]");
+                        }
+                    }
                 }
             }
+        }
+        
+        // 디버깅: 모든 photoItems의 현재 상태 로그
+        for (int i = 0; i < photoItems.size(); i++) {
+            PhotoItem item = photoItems.get(i);
+            android.util.Log.d("PostingActivity", "PhotoItem[" + i + "] - 이미지: " + item.getImagePath() + 
+                ", 요약: [" + item.getSummary() + "], 키워드: [" + item.getKeyword() + "]");
         }
     }
 
@@ -293,9 +351,39 @@ public class PostingActivity extends AppCompatActivity {
                 GeminiQuizGenerator generator = new GeminiQuizGenerator(PostingActivity.this);
                 Quiz quiz = generator.generateQuiz(imagePath, summary, keyword);
                 if (quiz != null) {
+                    android.util.Log.d("PostingActivity", "========== 퀴즈 저장 시작 ==========");
+                    android.util.Log.d("PostingActivity", "Quiz 객체 정보:");
+                    android.util.Log.d("PostingActivity", "  - 문제: " + quiz.getQuestion());
+                    android.util.Log.d("PostingActivity", "  - 선택지1: " + quiz.getOption1());
+                    android.util.Log.d("PostingActivity", "  - 선택지2: " + quiz.getOption2());
+                    android.util.Log.d("PostingActivity", "  - 선택지3: " + quiz.getOption3());
+                    android.util.Log.d("PostingActivity", "  - 선택지4: " + quiz.getOption4());
+                    android.util.Log.d("PostingActivity", "  - 정답: " + quiz.getCorrectAnswer());
+                    android.util.Log.d("PostingActivity", "  - 설명: " + quiz.getExplanation());
+                    
                     quiz.setStudyLogId(logId);
+                    android.util.Log.d("PostingActivity", "StudyLogId 설정: " + logId);
+                    android.util.Log.d("PostingActivity", "선택된 날짜: " + selectedDate);
+                    
                     long quizId = database.insertQuiz(quiz);
                     android.util.Log.d("PostingActivity", "퀴즈 생성 성공! quizId: " + quizId);
+                    
+                    // 저장 후 즉시 확인
+                    com.example.studylogapp.model.Quiz savedQuiz = database.getQuizByLogId(logId);
+                    if (savedQuiz != null) {
+                        android.util.Log.d("PostingActivity", "✅ 저장 확인 성공! 저장된 퀴즈 ID: " + savedQuiz.getId());
+                        android.util.Log.d("PostingActivity", "저장된 퀴즈 문제: " + savedQuiz.getQuestion());
+                    } else {
+                        android.util.Log.e("PostingActivity", "❌ 저장 확인 실패! 퀴즈를 찾을 수 없습니다.");
+                    }
+                    
+                    // 퀴즈 생성 완료를 알리는 Broadcast 전송
+                    android.content.Intent broadcastIntent = new android.content.Intent("com.example.studylogapp.QUIZ_CREATED");
+                    broadcastIntent.putExtra("date", selectedDate);
+                    sendBroadcast(broadcastIntent);
+                    android.util.Log.d("PostingActivity", "퀴즈 생성 Broadcast 전송: " + selectedDate);
+                    android.util.Log.d("PostingActivity", "========== 퀴즈 저장 완료 ==========");
+                    
                     runOnUiThread(() -> {
                         Toast.makeText(PostingActivity.this, "퀴즈가 생성되었습니다!", Toast.LENGTH_SHORT).show();
                     });
@@ -304,6 +392,17 @@ public class PostingActivity extends AppCompatActivity {
                     android.util.Log.e("PostingActivity", "이미지 경로: " + imagePath);
                     android.util.Log.e("PostingActivity", "요약: " + summary);
                     android.util.Log.e("PostingActivity", "키워드: " + keyword);
+                    
+                    // 실패 원인 상세 로깅
+                    if (imagePath == null || imagePath.trim().isEmpty()) {
+                        android.util.Log.e("PostingActivity", "이미지 경로가 비어있음");
+                    }
+                    if (summary == null || summary.trim().isEmpty()) {
+                        android.util.Log.e("PostingActivity", "요약이 비어있음");
+                    }
+                    if (keyword == null || keyword.trim().isEmpty()) {
+                        android.util.Log.e("PostingActivity", "키워드가 비어있음");
+                    }
                 }
             } catch (Exception e) {
                 android.util.Log.e("PostingActivity", "퀴즈 생성 중 예외 발생", e);
