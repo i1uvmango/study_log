@@ -166,30 +166,6 @@ mobile-programming-study_log/
 
 #### 3.1.2 주요 기능 및 코드 흐름
 
-```16:36:app/src/main/java/com/example/studylogapp/MainActivity.java
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        // 알람 설정
-        AlarmManagerHelper.scheduleDailyAlarm(this);
-
-        Button btnCalendar = findViewById(R.id.btn_calendar);
-        Button btnSettings = findViewById(R.id.btn_settings);
-
-        btnCalendar.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, CalendarActivity.class);
-            startActivity(intent);
-        });
-
-        btnSettings.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-            startActivity(intent);
-        });
-    }
-```
-
 **동작 과정:**
 1. `onCreate()` 호출 → `setContentView(R.layout.activity_main)`로 레이아웃 로드
 2. `AlarmManagerHelper.scheduleDailyAlarm(this)` 호출하여 일일 알람 자동 설정
@@ -228,60 +204,6 @@ CalendarActivity.onCreate() 호출
 
 **1. 초기화 과정**
 
-```31:76:app/src/main/java/com/example/studylogapp/ui/calendar/CalendarActivity.java
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_calendar);
-
-        database = new AppDatabase(this);
-        database.open();
-
-        currentMonth = Calendar.getInstance();
-        currentMonth.set(Calendar.DAY_OF_MONTH, 1);
-
-        tvMonthYear = findViewById(R.id.tv_month_year);
-        btnPrevMonth = findViewById(R.id.btn_prev_month);
-        btnNextMonth = findViewById(R.id.btn_next_month);
-        recyclerView = findViewById(R.id.recycler_calendar);
-
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 7));
-        adapter = new CalendarAdapter(this, currentMonth, database);
-        recyclerView.setAdapter(adapter);
-
-        adapter.setOnDateClickListener(date -> {
-            List<StudyPost> posts = database.getPostsByDate(date);
-            if (posts != null && !posts.isEmpty()) {
-                // 게시물이 있으면 슬라이드 뷰어로 이동
-                Intent intent = new Intent(CalendarActivity.this, SlideViewerActivity.class);
-                intent.putExtra("date", date);
-                startActivity(intent);
-            } else {
-                // 게시물이 없으면 작성 화면으로 이동
-                Intent intent = new Intent(CalendarActivity.this, PostingActivity.class);
-                intent.putExtra("date", date);
-                startActivity(intent);
-            }
-        });
-
-        btnPrevMonth.setOnClickListener(v -> {
-            currentMonth.add(Calendar.MONTH, -1);
-            updateCalendar();
-        });
-
-        btnNextMonth.setOnClickListener(v -> {
-            currentMonth.add(Calendar.MONTH, 1);
-            updateCalendar();
-        });
-
-        updateCalendar();
-        
-        // 퀴즈 UI 초기화 및 오늘의 퀴즈 로드
-        initQuizUI();
-        loadTodayQuiz();
-    }
-```
-
 **동작 과정:**
 1. 데이터베이스 초기화: `AppDatabase` 인스턴스 생성 및 `open()` 호출
 2. 현재 월 설정: `Calendar.getInstance()`로 현재 날짜 가져오고 1일로 설정
@@ -315,44 +237,7 @@ startActivity(intent)로 화면 전환
 
 **3. CalendarAdapter의 날짜 생성 로직**
 
-```45:80:app/src/main/java/com/example/studylogapp/ui/calendar/CalendarAdapter.java
-    private void generateDays() {
-        days.clear();
-        
-        // 요일 헤더 추가
-        String[] weekDays = {"일", "월", "화", "수", "목", "금", "토"};
-        for (String day : weekDays) {
-            days.add(new CalendarDay(day, true, false, false, null));
-        }
-
-        Calendar firstDay = DateUtils.getFirstDayOfMonth(currentMonth);
-        int firstDayOfWeek = DateUtils.getFirstDayOfWeek(currentMonth);
-        int daysInMonth = DateUtils.getDaysInMonth(currentMonth);
-
-        // 빈 셀 추가
-        for (int i = 0; i < firstDayOfWeek; i++) {
-            days.add(new CalendarDay("", false, false, false, null));
-        }
-
-        // 날짜 셀 추가
-        List<String> datesWithPosts = database.getDatesWithPosts(
-            currentMonth.get(Calendar.YEAR),
-            currentMonth.get(Calendar.MONTH) + 1
-        );
-
-        Calendar today = Calendar.getInstance();
-        for (int i = 1; i <= daysInMonth; i++) {
-            Calendar day = (Calendar) firstDay.clone();
-            day.set(Calendar.DAY_OF_MONTH, i);
-            String dateStr = DateUtils.formatDate(day);
-            boolean hasPost = datesWithPosts.contains(dateStr);
-            boolean isToday = DateUtils.isToday(day);
-            String thumbnailUri = hasPost ? database.getThumbnailUri(dateStr) : null;
-            
-            days.add(new CalendarDay(String.valueOf(i), false, isToday, hasPost, thumbnailUri));
-        }
-    }
-```
+`generateDays()` 메서드에서 캘린더 날짜 데이터를 생성합니다.
 
 **데이터 생성 흐름:**
 1. 요일 헤더 7개 추가 (일~토)
@@ -367,24 +252,9 @@ startActivity(intent)로 화면 전환
 
 **4. 월 변경 버튼 처리**
 
-```66:74:app/src/main/java/com/example/studylogapp/ui/calendar/CalendarActivity.java
-        btnPrevMonth.setOnClickListener(v -> {
-            currentMonth.add(Calendar.MONTH, -1);
-            updateCalendar();
-        });
+`btnPrevMonth`와 `btnNextMonth` 클릭 시 `currentMonth.add(Calendar.MONTH, ±1)`로 월을 변경하고 `updateCalendar()`를 호출합니다.
 
-        btnNextMonth.setOnClickListener(v -> {
-            currentMonth.add(Calendar.MONTH, 1);
-            updateCalendar();
-        });
-```
-
-```79:82:app/src/main/java/com/example/studylogapp/ui/calendar/CalendarActivity.java
-    private void updateCalendar() {
-        tvMonthYear.setText(DateUtils.formatMonthYear(currentMonth));
-        adapter.updateMonth(currentMonth);
-    }
-```
+`updateCalendar()` 메서드는 `DateUtils.formatMonthYear()`로 월/년도 텍스트를 업데이트하고 `adapter.updateMonth()`를 호출합니다.
 
 **월 변경 흐름:**
 ```
@@ -464,104 +334,39 @@ isQuizAnswered = true 설정
 
 **1. 초기화 및 기존 데이터 로드**
 
-```49:95:app/src/main/java/com/example/studylogapp/ui/posting/PostingActivity.java
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_posting);
+`onCreate()` 메서드에서 초기화를 수행합니다.
 
-        database = new AppDatabase(this);
-        database.open();
-        imageStorage = new ImageStorageManager(this);
-
-        selectedDate = getIntent().getStringExtra("date");
-        if (selectedDate == null) {
-            selectedDate = DateUtils.formatDate(Calendar.getInstance());
-        }
-
-        tvDate = findViewById(R.id.tv_date);
-        btnAddPhoto = findViewById(R.id.btn_add_photo);
-        btnSave = findViewById(R.id.btn_save);
-        btnCancel = findViewById(R.id.btn_cancel);
-        recyclerView = findViewById(R.id.recycler_photos);
-
-        Calendar date = DateUtils.parseDate(selectedDate);
-        tvDate.setText(String.format(getString(R.string.date_format),
-            date.get(Calendar.YEAR),
-            date.get(Calendar.MONTH) + 1,
-            date.get(Calendar.DAY_OF_MONTH)));
-
-        photoItems = new ArrayList<>();
-        adapter = new PhotoPickerAdapter(photoItems, this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        recyclerView.setAdapter(adapter);
-
-        // 기존 데이터 로드
-        loadExistingData();
-
-        btnAddPhoto.setOnClickListener(v -> showPhotoSourceDialog());
-        btnSave.setOnClickListener(v -> savePost());
-        btnCancel.setOnClickListener(v -> finish());
-
-        adapter.setOnDeleteListener(position -> {
-            PhotoItem item = photoItems.get(position);
-            if (item.getImagePath() != null) {
-                imageStorage.deleteImage(item.getImagePath());
-            }
-            photoItems.remove(position);
-            adapter.notifyDataSetChanged();
-        });
-    }
-```
-
-**Intent 데이터 수신:**
-- `getIntent().getStringExtra("date")`로 전달받은 날짜 문자열 추출
-- 날짜가 없으면 현재 날짜 사용
+**초기화 과정:**
+1. `setContentView()`로 레이아웃 로드
+2. `AppDatabase` 인스턴스 생성 및 `open()` 호출
+3. `ImageStorageManager` 인스턴스 생성
+4. `getIntent().getStringExtra("date")`로 날짜 추출 (없으면 `DateUtils.formatDate()`로 현재 날짜 사용)
+5. `findViewById()`로 UI 요소 참조 획득
+6. `DateUtils.parseDate()`로 날짜 파싱 후 `tvDate.setText()`로 표시
+7. `PhotoPickerAdapter` 생성 및 `RecyclerView` 설정
+8. `loadExistingData()`로 기존 게시물 로드
+9. 버튼 클릭 리스너 등록:
+   - `btnAddPhoto`: `showPhotoSourceDialog()` 호출
+   - `btnSave`: `savePost()` 호출
+   - `btnCancel`: `finish()` 호출
+10. `adapter.setOnDeleteListener()`로 삭제 리스너 등록 (삭제 시 `imageStorage.deleteImage()` 호출)
 
 **2. 사진 추가 프로세스**
 
-```108:147:app/src/main/java/com/example/studylogapp/ui/posting/PostingActivity.java
-    private void showPhotoSourceDialog() {
-        if (photoItems.size() >= MAX_PHOTOS) {
-            Toast.makeText(this, R.string.max_photos, Toast.LENGTH_SHORT).show();
-            return;
-        }
+`showPhotoSourceDialog()` 메서드에서 사진 소스 선택 다이얼로그를 표시합니다.
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.select_photo_source);
-        builder.setItems(new String[]{getString(R.string.camera), getString(R.string.gallery)},
-            (dialog, which) -> {
-                if (which == 0) {
-                    openCamera();
-                } else {
-                    openGallery();
-                }
-            });
-        builder.show();
-    }
-
-    private void openCamera() {
-        if (!PermissionUtils.hasCameraPermission(this)) {
-            PermissionUtils.requestCameraPermission(this);
-            return;
-        }
-
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(intent, REQUEST_CAMERA);
-        }
-    }
-
-    private void openGallery() {
-        if (!PermissionUtils.hasStoragePermission(this)) {
-            PermissionUtils.requestStoragePermission(this);
-            return;
-        }
-
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, REQUEST_GALLERY);
-    }
-```
+**사진 추가 흐름:**
+1. `photoItems.size() >= MAX_PHOTOS` 체크 → 초과 시 Toast 표시 후 종료
+2. `AlertDialog.Builder`로 카메라/갤러리 선택 다이얼로그 생성
+3. 선택에 따라:
+   - 카메라: `openCamera()` 호출
+     - `PermissionUtils.hasCameraPermission()` 확인
+     - 권한 없음 → `PermissionUtils.requestCameraPermission()` 호출
+     - 권한 있음 → `Intent(MediaStore.ACTION_IMAGE_CAPTURE)` 생성 후 `startActivityForResult()` 호출
+   - 갤러리: `openGallery()` 호출
+     - `PermissionUtils.hasStoragePermission()` 확인
+     - 권한 없음 → `PermissionUtils.requestStoragePermission()` 호출
+     - 권한 있음 → `Intent(Intent.ACTION_PICK)` 생성 후 `startActivityForResult()` 호출
 
 **사진 추가 흐름:**
 ```
@@ -589,29 +394,7 @@ AlertDialog로 카메라/갤러리 선택
 
 **3. 사진 선택 결과 처리**
 
-```149:169:app/src/main/java/com/example/studylogapp/ui/posting/PostingActivity.java
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != RESULT_OK) return;
-
-        if (requestCode == REQUEST_CAMERA && data != null) {
-            Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-            String imagePath = imageStorage.saveImage(bitmap);
-            if (imagePath != null) {
-                photoItems.add(new PhotoItem(imagePath, "", ""));
-                adapter.notifyDataSetChanged();
-            }
-        } else if (requestCode == REQUEST_GALLERY && data != null) {
-            Uri uri = data.getData();
-            String imagePath = imageStorage.saveImageFromUri(uri);
-            if (imagePath != null) {
-                photoItems.add(new PhotoItem(imagePath, "", ""));
-                adapter.notifyDataSetChanged();
-            }
-        }
-    }
-```
+`onActivityResult()` 메서드에서 카메라/갤러리 결과를 처리합니다.
 
 **결과 처리 흐름:**
 ```
@@ -639,29 +422,15 @@ adapter.notifyDataSetChanged()로 RecyclerView 갱신
 
 **4. 이미지 저장 과정 (ImageStorageManager)**
 
-```28:48:app/src/main/java/com/example/studylogapp/storage/ImageStorageManager.java
-    public String saveImage(Bitmap bitmap) {
-        File imageDir = getImageDirectory();
-        if (!imageDir.exists()) {
-            imageDir.mkdirs();
-        }
+`ImageStorageManager.saveImage()` 메서드에서 이미지를 저장합니다.
 
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        String imageFileName = "IMG_" + timeStamp + ".jpg";
-        File imageFile = new File(imageDir, imageFileName);
-
-        try {
-            FileOutputStream fos = new FileOutputStream(imageFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
-            fos.flush();
-            fos.close();
-            return imageFile.getAbsolutePath();
-        } catch (IOException e) {
-            Log.e(TAG, "Error saving image", e);
-            return null;
-        }
-    }
-```
+**저장 과정:**
+1. `getImageDirectory()`로 저장 디렉토리 경로 획득
+2. 디렉토리가 없으면 `mkdirs()`로 생성
+3. 타임스탬프 기반 파일명 생성 (`IMG_yyyyMMdd_HHmmss.jpg`)
+4. `FileOutputStream`으로 파일 생성
+5. `bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos)`로 JPEG 압축 저장
+6. 파일 절대 경로 반환
 
 **저장 경로:**
 - `context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)/StudyLogImages/`
@@ -669,31 +438,7 @@ adapter.notifyDataSetChanged()로 RecyclerView 갱신
 
 **5. 게시물 저장 프로세스**
 
-```183:205:app/src/main/java/com/example/studylogapp/ui/posting/PostingActivity.java
-    private void savePost() {
-        if (photoItems.isEmpty()) {
-            Toast.makeText(this, R.string.photo_required, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // 기존 게시물 삭제
-        if (existingLogId != -1) {
-            database.deleteAllPostsByLogId(existingLogId);
-        }
-
-        // 새 게시물 저장
-        long logId = database.getOrCreateStudyLogId(selectedDate);
-        for (int i = 0; i < photoItems.size(); i++) {
-            PhotoItem item = photoItems.get(i);
-            StudyPost post = new StudyPost(logId, item.getImagePath(), item.getSummary(), item.getKeyword(), i);
-            database.insertStudyPost(post);
-        }
-
-        Toast.makeText(this, R.string.save, Toast.LENGTH_SHORT).show();
-        setResult(RESULT_OK);
-        finish();
-    }
-```
+`savePost()` 메서드에서 게시물을 저장합니다.
 
 **저장 흐름:**
 ```
@@ -738,39 +483,7 @@ finish()로 Activity 종료 및 이전 화면으로 복귀
 
 **6. PhotoPickerAdapter의 데이터 바인딩**
 
-```69:99:app/src/main/java/com/example/studylogapp/ui/posting/PhotoPickerAdapter.java
-        public void bind(PhotoItem item, int position) {
-            File imageFile = new File(item.getImagePath());
-            if (imageFile.exists()) {
-                Glide.with(itemView.getContext())
-                    .load(imageFile)
-                    .centerCrop()
-                    .into(ivPhoto);
-            }
-
-            etSummary.setText(item.getSummary());
-            etSummary.setHint(activity.getString(R.string.summary_hint));
-            etSummary.setOnFocusChangeListener((v, hasFocus) -> {
-                if (!hasFocus) {
-                    item.setSummary(etSummary.getText().toString());
-                }
-            });
-
-            etKeyword.setText(item.getKeyword());
-            etKeyword.setHint(activity.getString(R.string.keyword_hint));
-            etKeyword.setOnFocusChangeListener((v, hasFocus) -> {
-                if (!hasFocus) {
-                    item.setKeyword(etKeyword.getText().toString());
-                }
-            });
-
-            btnDelete.setOnClickListener(v -> {
-                if (deleteListener != null) {
-                    deleteListener.onDelete(position);
-                }
-            });
-        }
-```
+`PhotoPickerAdapter.bind()` 메서드에서 각 아이템을 바인딩합니다.
 
 **바인딩 흐름:**
 1. 이미지 로드: `Glide`로 파일 경로에서 이미지 로드 및 표시
@@ -792,53 +505,22 @@ finish()로 Activity 종료 및 이전 화면으로 복귀
 
 **1. 초기화 및 게시물 로드**
 
-```30:58:app/src/main/java/com/example/studylogapp/ui/viewer/SlideViewerActivity.java
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_slide_viewer);
+`onCreate()` 메서드에서 초기화를 수행합니다.
 
-        selectedDate = getIntent().getStringExtra("date");
-        if (selectedDate == null) {
-            finish();
-            return;
-        }
-
-        database = new AppDatabase(this);
-        database.open();
-        imageStorage = new ImageStorageManager(this);
-
-        viewPager = findViewById(R.id.viewpager_slides);
-        btnEdit = findViewById(R.id.btn_edit);
-        btnDelete = findViewById(R.id.btn_delete);
-
-        loadPosts();
-
-        btnEdit.setOnClickListener(v -> {
-            Intent intent = new Intent(SlideViewerActivity.this, PostingActivity.class);
-            intent.putExtra("date", selectedDate);
-            startActivityForResult(intent, 100);
-        });
-
-        btnDelete.setOnClickListener(v -> showDeleteConfirmDialog());
-    }
-```
+**초기화 과정:**
+1. `setContentView()`로 레이아웃 로드
+2. `getIntent().getStringExtra("date")`로 날짜 추출 (없으면 `finish()` 호출)
+3. `AppDatabase` 인스턴스 생성 및 `open()` 호출
+4. `ImageStorageManager` 인스턴스 생성
+5. `findViewById()`로 UI 요소 참조 획득
+6. `loadPosts()`로 게시물 로드
+7. 버튼 클릭 리스너 등록:
+   - `btnEdit`: `Intent` 생성 후 `PostingActivity`로 전환 (`startActivityForResult()`)
+   - `btnDelete`: `showDeleteConfirmDialog()` 호출
 
 **2. 게시물 로드 및 ViewPager 설정**
 
-```60:70:app/src/main/java/com/example/studylogapp/ui/viewer/SlideViewerActivity.java
-    private void loadPosts() {
-        posts = database.getPostsByDate(selectedDate);
-        if (posts == null || posts.isEmpty()) {
-            Toast.makeText(this, R.string.no_photo, Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
-        adapter = new SlideViewPagerAdapter(this, posts);
-        viewPager.setAdapter(adapter);
-    }
-```
+`loadPosts()` 메서드에서 게시물을 로드하고 ViewPager를 설정합니다.
 
 **로드 흐름:**
 ```
@@ -855,11 +537,7 @@ database.getPostsByDate(selectedDate)로 게시물 리스트 조회
 
 **3. SlideViewPagerAdapter의 Fragment 생성**
 
-```22:24:app/src/main/java/com/example/studylogapp/ui/viewer/SlideViewPagerAdapter.java
-    public androidx.fragment.app.Fragment createFragment(int position) {
-        return SlidePostFragment.newInstance(posts.get(position));
-    }
-```
+`createFragment()` 메서드에서 `SlidePostFragment.newInstance()`를 호출하여 Fragment를 생성합니다.
 
 **Fragment 생성 흐름:**
 ```
@@ -878,62 +556,19 @@ Fragment 인스턴스 반환
 
 **4. SlidePostFragment의 데이터 표시**
 
-```49:103:app/src/main/java/com/example/studylogapp/ui/viewer/SlidePostFragment.java
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.item_slide_post, container, false);
-        
-        recyclerView = view.findViewById(R.id.viewpager_photos);
-        tvSummary = view.findViewById(R.id.tv_summary);
-        tvKeyword = view.findViewById(R.id.tv_keyword);
+`onCreateView()` 메서드에서 Fragment의 뷰를 생성하고 데이터를 바인딩합니다.
 
-        if (post != null) {
-            // 같은 날짜의 모든 게시물 가져오기
-            allPosts = database.getPostsByLogId(post.getStudyLogId());
-            List<String> photoUris = new ArrayList<>();
-            for (StudyPost p : allPosts) {
-                photoUris.add(p.getPhotoUri());
-            }
-
-            adapter = new PhotoSlideAdapter(requireContext(), photoUris);
-            recyclerView.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
-            recyclerView.setAdapter(adapter);
-
-            // 현재 게시물의 인덱스 찾기
-            int currentIndex = 0;
-            for (int i = 0; i < allPosts.size(); i++) {
-                if (allPosts.get(i).getId() == post.getId()) {
-                    currentIndex = i;
-                    break;
-                }
-            }
-            recyclerView.scrollToPosition(currentIndex);
-
-            tvSummary.setText(post.getSummary());
-            tvKeyword.setText(post.getKeyword());
-
-            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-                @Override
-                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                    super.onScrollStateChanged(recyclerView, newState);
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-                        if (layoutManager != null) {
-                            int position = layoutManager.findFirstVisibleItemPosition();
-                            if (position >= 0 && position < allPosts.size()) {
-                                StudyPost currentPost = allPosts.get(position);
-                                tvSummary.setText(currentPost.getSummary());
-                                tvKeyword.setText(currentPost.getKeyword());
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        return view;
-    }
-```
+**초기화 과정:**
+1. `inflater.inflate()`로 레이아웃 인플레이트
+2. `findViewById()`로 UI 요소 참조 획득
+3. `database.getPostsByLogId()`로 같은 날짜의 모든 게시물 조회
+4. `photoUris` 리스트 생성 (각 게시물의 `getPhotoUri()` 호출)
+5. `PhotoSlideAdapter` 생성 및 `RecyclerView` 설정
+6. 현재 게시물의 인덱스 찾기 후 `scrollToPosition()` 호출
+7. `tvSummary.setText()`, `tvKeyword.setText()`로 현재 게시물 정보 표시
+8. `addOnScrollListener()`로 스크롤 리스너 등록:
+   - 스크롤 완료 시 `findFirstVisibleItemPosition()`으로 현재 위치 확인
+   - 해당 위치의 게시물 정보로 `tvSummary`, `tvKeyword` 업데이트
 
 **Fragment 초기화 흐름:**
 ```
@@ -961,30 +596,16 @@ RecyclerView 스크롤 리스너 등록:
 
 **5. 삭제 기능**
 
-```72:93:app/src/main/java/com/example/studylogapp/ui/viewer/SlideViewerActivity.java
-    private void showDeleteConfirmDialog() {
-        new AlertDialog.Builder(this)
-            .setTitle(R.string.delete)
-            .setMessage(R.string.delete_confirm)
-            .setPositiveButton(R.string.yes, (dialog, which) -> {
-                deleteAllPosts();
-            })
-            .setNegativeButton(R.string.no, null)
-            .show();
-    }
+`showDeleteConfirmDialog()` 메서드에서 삭제 확인 다이얼로그를 표시하고, 확인 시 `deleteAllPosts()`를 호출합니다.
 
-    private void deleteAllPosts() {
-        for (StudyPost post : posts) {
-            imageStorage.deleteImage(post.getPhotoUri());
-            database.deleteStudyPost(post.getId());
-        }
-        database.deleteStudyLog(selectedDate);
-        
-        Toast.makeText(this, R.string.delete, Toast.LENGTH_SHORT).show();
-        setResult(RESULT_OK);
-        finish();
-    }
-```
+**삭제 과정:**
+1. `AlertDialog.Builder`로 확인 다이얼로그 생성
+2. "예" 선택 시 `deleteAllPosts()` 호출:
+   - `posts` 리스트 반복:
+     - `imageStorage.deleteImage()`로 이미지 파일 삭제
+     - `database.deleteStudyPost()`로 DB에서 게시물 삭제
+   - `database.deleteStudyLog()`로 StudyLog 삭제
+   - Toast 표시 후 `setResult(RESULT_OK)`, `finish()` 호출
 
 **삭제 흐름:**
 ```
@@ -1021,21 +642,15 @@ setResult(RESULT_OK) 및 finish()
 
 **1. 알람 시간 설정**
 
-```59:71:app/src/main/java/com/example/studylogapp/ui/settings/SettingsActivity.java
-    private void showTimePicker() {
-        int currentHour = AlarmManagerHelper.getAlarmHour(this);
-        int currentMinute = AlarmManagerHelper.getAlarmMinute(this);
+`showTimePicker()` 메서드에서 알람 시간 설정 다이얼로그를 표시합니다.
 
-        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
-            (view, hourOfDay, minute) -> {
-                AlarmManagerHelper.setAlarmTime(SettingsActivity.this, hourOfDay, minute);
-                updateAlarmTimeDisplay();
-                Toast.makeText(SettingsActivity.this, "알람 시간이 설정되었습니다", Toast.LENGTH_SHORT).show();
-            },
-            currentHour, currentMinute, true);
-        timePickerDialog.show();
-    }
-```
+**설정 과정:**
+1. `AlarmManagerHelper.getAlarmHour()`, `getAlarmMinute()`로 현재 설정값 조회
+2. `TimePickerDialog` 생성 및 표시
+3. 사용자가 시간 선택 후 확인:
+   - `AlarmManagerHelper.setAlarmTime()` 호출 (SharedPreferences 저장 및 알람 재설정)
+   - `updateAlarmTimeDisplay()`로 화면 업데이트
+   - Toast 표시
 
 **알람 시간 설정 흐름:**
 ```
@@ -1058,14 +673,13 @@ updateAlarmTimeDisplay()로 화면 업데이트
 
 **2. 알람 ON/OFF 스위치**
 
-```42:47:app/src/main/java/com/example/studylogapp/ui/settings/SettingsActivity.java
-        switchAlarm.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            AlarmManagerHelper.setAlarmEnabled(SettingsActivity.this, isChecked);
-            Toast.makeText(SettingsActivity.this, 
-                isChecked ? "알람이 켜졌습니다" : "알람이 꺼졌습니다", 
-                Toast.LENGTH_SHORT).show();
-        });
-```
+`switchAlarm.setOnCheckedChangeListener()`로 스위치 상태 변경 리스너를 등록합니다.
+
+**스위치 동작:**
+- `AlarmManagerHelper.setAlarmEnabled()` 호출
+  - `isChecked == true`: `scheduleDailyAlarm()` 호출
+  - `isChecked == false`: `cancelAlarm()` 호출
+- Toast로 상태 메시지 표시
 
 **스위치 동작:**
 - `isChecked == true`: `scheduleDailyAlarm()` 호출
@@ -1073,19 +687,15 @@ updateAlarmTimeDisplay()로 화면 업데이트
 
 **3. 데이터 초기화**
 
-```73:83:app/src/main/java/com/example/studylogapp/ui/settings/SettingsActivity.java
-    private void showClearDataDialog() {
-        new AlertDialog.Builder(this)
-            .setTitle(R.string.clear_data)
-            .setMessage(R.string.clear_data_confirm)
-            .setPositiveButton(R.string.yes, (dialog, which) -> {
-                database.clearAllData();
-                Toast.makeText(SettingsActivity.this, "모든 데이터가 삭제되었습니다", Toast.LENGTH_SHORT).show();
-            })
-            .setNegativeButton(R.string.no, null)
-            .show();
-    }
-```
+`showClearDataDialog()` 메서드에서 데이터 초기화 확인 다이얼로그를 표시합니다.
+
+**초기화 과정:**
+1. `AlertDialog.Builder`로 확인 다이얼로그 생성
+2. "예" 선택 시 `database.clearAllData()` 호출:
+   - StudyPost 테이블 전체 삭제
+   - Quiz 테이블 전체 삭제
+   - StudyLog 테이블 전체 삭제
+3. Toast 표시
 
 **초기화 흐름:**
 ```
@@ -1173,9 +783,8 @@ PostingActivity.savePost()
     └─ generateQuizAsync() 호출
         ├─ ExecutorService로 별도 스레드 실행
         ├─ GeminiQuizGenerator.generateQuiz() 호출
-        │   ├─ 이미지 Base64 인코딩 (있는 경우)
         │   ├─ 프롬프트 생성 (요약, 키워드 포함)
-        │   ├─ Gemini API 호출 (gemini-pro-vision 또는 gemini-pro)
+        │   ├─ Retrofit을 통한 Gemini API 호출 (gemini-1.5-flash)
         │   └─ JSON 응답 파싱하여 Quiz 객체 생성
         ├─ quiz.setStudyLogId(logId) 설정
         └─ AppDatabase.insertQuiz()로 DB 저장
@@ -1388,8 +997,10 @@ openCamera()
 
 ### 6.2 외부 라이브러리
 - **Glide 4.16.0**: 이미지 로딩 및 캐싱
-- **Google Gemini API (generativeai 0.2.2)**: AI 퀴즈 생성 (선택적 사용)
-- **OkHttp 4.12.0**: HTTP 클라이언트 (Gemini API 호출용)
+- **Retrofit 2.9.0**: RESTful API 통신을 위한 HTTP 클라이언트
+- **Gson 2.10.1**: JSON 직렬화/역직렬화
+- **OkHttp 4.12.0**: HTTP 클라이언트 (Retrofit의 기본 클라이언트)
+- **OkHttp Logging Interceptor 4.12.0**: HTTP 요청/응답 로깅
 - **Material Design Components 1.11.0**: Material Design UI 컴포넌트
 
 ### 6.3 권한 관리
@@ -1401,7 +1012,203 @@ openCamera()
 
 ---
 
-## 7. 데이터 전환 과정 상세
+## 7. Gemini API 통합 아키텍처 (기술 보고서)
+
+### 7.1 Retrofit 기반 API 클라이언트 구조
+
+앱은 **Retrofit**을 사용하여 Gemini API와 통신하는 모듈화된 아키텍처를 채택했습니다.
+
+#### 7.1.1 ApiClient 싱글톤 패턴
+
+`ApiClient` 클래스는 싱글톤 패턴으로 구현되어 앱 전체에서 단일 Retrofit 인스턴스를 공유합니다.
+
+**초기화 과정:**
+1. `StudyLogApplication.onCreate()`에서 `ApiClient.init()` 호출
+2. `ApiClient.init()` 내부에서:
+   - `HttpLoggingInterceptor` 생성 및 BODY 레벨 로깅 설정
+   - `OkHttpClient.Builder`로 클라이언트 구성:
+     - 연결 타임아웃: 30초
+     - 읽기 타임아웃: 60초
+     - 쓰기 타임아웃: 60초
+     - 로깅 인터셉터 추가
+   - `Retrofit.Builder`로 Retrofit 인스턴스 생성:
+     - Base URL: `https://generativelanguage.googleapis.com/`
+     - Gson 컨버터 팩토리 추가
+     - 구성된 OkHttpClient 설정
+
+**인스턴스 획득:**
+- `ApiClient.getClient()`: Retrofit 인스턴스 반환 (초기화 확인 포함)
+- `ApiClient.getApiKey()`: `BuildConfig.GEMINI_API_KEY`에서 API 키 반환
+
+#### 7.1.2 GeminiApi 인터페이스
+
+`GeminiApi` 인터페이스는 Retrofit의 어노테이션을 사용하여 API 엔드포인트를 정의합니다.
+
+**메서드:**
+- `generateContent()`: `@POST` 어노테이션으로 `v1beta/models/gemini-1.5-flash:generateContent` 엔드포인트 호출
+  - `@Query("key")`: API 키를 쿼리 파라미터로 전달
+  - `@Body`: `GeminiRequest` 객체를 JSON으로 직렬화하여 요청 본문에 포함
+
+#### 7.1.3 DTO (Data Transfer Object) 구조
+
+**GeminiRequest:**
+- `contents`: 요청 콘텐츠 리스트
+  - `parts`: 텍스트 파트 리스트
+    - `text`: 프롬프트 문자열
+- `generationConfig`: 생성 설정
+  - `temperature`: 0.7
+  - `topK`: 40
+  - `topP`: 0.95
+  - `maxOutputTokens`: 1024
+
+**GeminiResponse:**
+- `candidates`: 응답 후보 리스트
+  - `content`: 콘텐츠 객체
+    - `parts`: 파트 리스트
+      - `text`: 생성된 텍스트
+- `error`: 에러 정보 (있는 경우)
+  - `code`: HTTP 상태 코드
+  - `message`: 에러 메시지
+  - `status`: 에러 상태
+
+### 7.2 퀴즈 생성 프로세스
+
+#### 7.2.1 GeminiQuizGenerator 클래스
+
+`GeminiQuizGenerator`는 Retrofit을 통해 Gemini API를 호출하여 퀴즈를 생성합니다.
+
+**주요 메서드:**
+
+1. **`generateQuiz()`**: 
+   - `ApiClient.getApiKey()`로 API 키 획득
+   - `createPrompt()`로 프롬프트 생성
+   - `createRequest()`로 `GeminiRequest` 객체 생성
+   - `geminiApi.generateContent()` 호출 (동기 실행, 백그라운드 스레드에서 실행되어야 함)
+   - `extractTextFromResponse()`로 응답에서 텍스트 추출
+   - `parseQuizResponse()`로 JSON 파싱하여 `Quiz` 객체 생성
+
+2. **`createPrompt()`**:
+   - 요약과 키워드를 포함한 프롬프트 문자열 생성
+   - JSON 형식 응답 요구사항 명시
+
+3. **`createRequest()`**:
+   - `GeminiRequest.Part` 생성 (프롬프트 포함)
+   - `GeminiRequest.Content` 생성 (파트 리스트 포함)
+   - `GeminiRequest.GenerationConfig` 생성 (온도, topK, topP, maxOutputTokens 설정)
+   - `GeminiRequest` 객체 반환
+
+4. **`extractTextFromResponse()`**:
+   - `GeminiResponse` 객체에서 `candidates[0].content.parts[0].text` 경로로 텍스트 추출
+   - null 체크 및 빈 문자열 검증
+
+5. **`parseQuizResponse()`**:
+   - 응답 텍스트에서 JSON 블록 추출 (`{` ~ `}`)
+   - `JSONObject`로 파싱
+   - `question`, `option1~4`, `correctAnswer`, `explanation` 필드 추출
+   - `Quiz` 객체 생성 및 반환
+
+#### 7.2.2 비동기 실행
+
+`PostingActivity.savePost()`에서 `generateQuizAsync()` 메서드를 통해 별도 스레드에서 퀴즈 생성:
+
+1. `ExecutorService`로 백그라운드 스레드 생성
+2. `generator.generateQuiz()` 호출 (동기 메서드이지만 별도 스레드에서 실행)
+3. 성공 시:
+   - `quiz.setStudyLogId()`로 로그 ID 설정
+   - `database.insertQuiz()`로 DB 저장
+   - `QUIZ_CREATED` 브로드캐스트 전송
+4. 실패 시: 에러 로그만 출력
+
+### 7.3 API 키 관리
+
+#### 7.3.1 local.properties 설정
+
+`local.properties` 파일에 `GEMINI_API_KEY` 설정:
+```
+GEMINI_API_KEY=YOUR_API_KEY_HERE
+```
+
+#### 7.3.2 BuildConfig 주입
+
+`app/build.gradle`에서:
+1. `local.properties` 파일 읽기
+2. `buildConfigField`로 `GEMINI_API_KEY`를 `BuildConfig`에 주입
+3. `buildConfig true` 설정 활성화
+
+#### 7.3.3 런타임 사용
+
+- `ApiClient.getApiKey()`: `BuildConfig.GEMINI_API_KEY` 반환
+- API 호출 시 `@Query("key")`로 쿼리 파라미터에 포함
+
+### 7.4 에러 처리 및 로깅
+
+#### 7.4.1 HTTP 에러 처리
+
+`generateQuiz()` 내부에서:
+- `response.isSuccessful()` 체크
+- 실패 시 `response.code()`로 HTTP 상태 코드 확인
+- `response.errorBody().string()`로 에러 본문 읽기
+- 에러 메시지에서 `"message"` 필드 추출하여 간결하게 로깅
+
+#### 7.4.2 응답 에러 처리
+
+`GeminiResponse.getError()` 체크:
+- 에러 객체가 있으면 `error.getCode()`와 `error.getMessage()` 로깅
+- null 반환하여 실패 처리
+
+#### 7.4.3 예외 처리
+
+`try-catch` 블록으로:
+- 네트워크 예외 (`IOException`)
+- JSON 파싱 예외 (`JSONException`)
+- 기타 예외 처리
+- 간결한 에러 메시지 로깅 (전체 스택 트레이스 제외)
+
+#### 7.4.4 로깅 최적화
+
+- `HttpLoggingInterceptor`: HTTP 요청/응답 본문 전체 로깅 (개발용)
+- 에러 메시지: 처음 200자만 출력하여 로그 길이 제한
+- API 키: 마스킹 처리 (처음 5자 + "..." + 마지막 5자)
+
+### 7.5 Application 클래스 초기화
+
+`StudyLogApplication` 클래스는 `Application`을 상속받아 앱 시작 시 `ApiClient`를 초기화합니다.
+
+**AndroidManifest.xml 설정:**
+- `<application android:name=".StudyLogApplication">`로 등록
+
+**초기화 흐름:**
+1. 앱 시작 시 `StudyLogApplication.onCreate()` 호출
+2. `ApiClient.init(this)` 호출
+3. Retrofit 인스턴스 생성 및 저장
+4. 이후 앱 전체에서 `ApiClient.getClient()`로 동일한 인스턴스 사용
+
+### 7.6 성능 최적화
+
+#### 7.6.1 이미지 처리 제거
+
+초기 구현에서는 이미지를 Base64로 인코딩하여 API에 전송했으나, 성능 문제로 제거:
+- 메인 스레드 블로킹 방지
+- 네트워크 전송량 감소
+- API 응답 시간 단축
+
+현재는 텍스트(요약, 키워드)만 사용하여 퀴즈 생성.
+
+#### 7.6.2 타임아웃 설정
+
+- 연결 타임아웃: 30초 (네트워크 지연 대응)
+- 읽기/쓰기 타임아웃: 60초 (대용량 응답 처리)
+
+#### 7.6.3 동기 호출
+
+`generateQuiz()`는 동기 메서드로 구현되어 `ExecutorService`에서 실행:
+- Retrofit의 `Call.execute()` 사용
+- 비동기 콜백 대신 동기 호출로 에러 처리 단순화
+- 별도 스레드에서 실행되므로 UI 블로킹 없음
+
+---
+
+## 8. 데이터 전환 과정 상세
 
 ### 7.1 PhotoItem → StudyPost 변환
 
@@ -1456,7 +1263,7 @@ DateUtils.parseDate(dateString)
 
 ---
 
-## 8. 이벤트 핸들러 체인
+## 9. 이벤트 핸들러 체인
 
 ### 8.1 버튼 클릭 이벤트 체인
 
@@ -1508,7 +1315,7 @@ Fragment의 onCreateView() 실행
 
 ---
 
-## 9. 메모리 및 성능 고려사항
+## 10. 메모리 및 성능 고려사항
 
 ### 9.1 이미지 로딩 최적화
 - **Glide 사용**: 자동 메모리 캐싱 및 리사이징
@@ -1525,7 +1332,7 @@ Fragment의 onCreateView() 실행
 
 ---
 
-## 10. 결론
+## 11. 결론
 
 이 앱은 **학습 로그를 날짜별로 관리하는 캘린더 기반 앱**으로, 다음과 같은 특징을 가집니다:
 
